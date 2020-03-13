@@ -11,7 +11,7 @@
     <jmxConfigurator/>
 
     <property name="APP_NAME" value="web-demo"/>
-    <property name="LOG_PATH" value="F:\\logs\\${APP_NAME}"/>
+    <property name="LOG_PATH" value="/home/ec2-user/logs/${APP_NAME}"/>
     <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%-5level] in %logger{80} - %msg %n"/>
 
 
