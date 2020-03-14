@@ -1,5 +1,6 @@
 package com.demo;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -11,6 +12,7 @@ import java.util.Arrays;
 @Configuration
 //默认扫描启动类所在的包目录及子目录，可以通过scanBasePackages属性定制
 @SpringBootApplication
+@MapperScan("com.demo.dao.mapper")
 public class DemoApplicationEntrance {
     private static final Logger logger=LoggerFactory.getLogger(DemoApplicationEntrance.class);
     public static void main(String[] args) {
