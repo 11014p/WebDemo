@@ -18,9 +18,5 @@ public class ExampleController {
         return exampleService.hello();
     }
 
-    @GetMapping(path = "/accounts")
-    public List<Account> getAccounts() {
-        return exampleService.getAllAccounts();
-    }
 }
 

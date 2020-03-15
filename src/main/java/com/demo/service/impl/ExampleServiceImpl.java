@@ -20,8 +20,4 @@ public class ExampleServiceImpl implements ExampleService {
         return jdbcDao.getHello();
     }
 
-    @Override
-    public List<Account> getAllAccounts() {
-        return accountMapper.getAllAccounts();
-    }
 }
