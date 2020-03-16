@@ -43,7 +43,7 @@ public class AccountServiceImpl implements AccountService {
         EmailTemplate template=new EmailTemplate();
         template.setToAddress(account.getEmail());
         template.setSubject("账号激活");
-        template.setContent("内容详情 ....");
+        template.setContent("详细信息：<a href='http://www.baidu.com'>http://www.baidu.com</a>");
         SendMail sendMail=new SendMail(template);
         sendMail.start();
         logger.info("insert account into database success,[{}]", account);
