@@ -1,7 +1,6 @@
 package com.demo.utils;
 
 import com.demo.model.EmailTemplate;
-import com.google.common.base.Joiner;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
@@ -88,4 +87,13 @@ public class SendMail extends Thread {
         }
     }
 
+    public static void main(String[] args) throws InterruptedException {
+        EmailTemplate template=new EmailTemplate();
+        template.setToAddress("zhujianan162@163.com");
+        template.setSubject("邮件测试2");
+        template.setContent("详细信息：<a href='http://www.baidu.com'>http://www.baidu.com</a>");
+        SendMail sendMail=new SendMail(template);
+        sendMail.start();
+        Thread.sleep(2000);
+    }
 }

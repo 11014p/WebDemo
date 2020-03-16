@@ -43,7 +43,7 @@ public class AccountServiceImpl implements AccountService {
         EmailTemplate template=new EmailTemplate();
         template.setToAddress(account.getEmail());
         template.setSubject("账号激活");
-        template.setContent("content ....");
+        template.setContent("内容详情 ....");
         SendMail sendMail=new SendMail(template);
         sendMail.start();
         logger.info("insert account into database success,[{}]", account);
