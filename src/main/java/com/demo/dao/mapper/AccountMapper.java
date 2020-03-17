@@ -8,11 +8,19 @@ import org.apache.ibatis.annotations.Update;
 import java.util.List;
 
 public interface AccountMapper {
+    @Select("SELECT * FROM account where IS_DEL='N'")
+    //查询所有账号
+    List<Account> getAllAccounts();
+
     @Select("SELECT * FROM account where IS_DEL='N' and IS_ACTIVE='A'")
+    //查询已激活的账号
     List<Account> getAllActiveAccounts();
 
     @Select("SELECT * FROM account WHERE id = #{id}")
     Account getAccountById(Integer id);
+
+    @Select("SELECT * FROM account WHERE email = #{email}")
+    Account getAccountByEmail(String email);
 
     @Insert("<script>" +
             "insert into account" +

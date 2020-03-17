@@ -7,6 +7,7 @@ public class I18nKeys {
     public static final String accountRegesitMultiEmail = "accountRegesitMultiEmail";
     public static final String accountRegesitEmailErr = "accountRegesitEmailErr";
     public static final String accountActiveSuccess = "accountActiveSuccess";
+    public static final String accountActiveFailure = "accountActiveFailure";
     public static final String loginFailure = "loginFailure";
 
 }

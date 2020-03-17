@@ -9,6 +9,9 @@ public interface AccountService {
     //用户注册
     void regesit(Account account);
 
+    //用户激活
+    void active(String email,String activeCode);
+
     //用户登录
-    boolean login(Account account);
+    Account login(Account account);
 }

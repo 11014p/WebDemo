@@ -83,4 +83,9 @@ public class EncryptUtil {
         }
         return null;
     }
+
+    public static void main(String[] args) {
+        String PRIVATE_KEY = "p@ssword#123";//私钥
+        System.out.println(getSoltMd5("zhujianan162@163.com", PRIVATE_KEY));
+    }
 }
