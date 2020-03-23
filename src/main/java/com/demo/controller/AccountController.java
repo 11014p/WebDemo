@@ -5,6 +5,7 @@ import com.demo.constants.I18nKeys;
 import com.demo.service.AccountService;
 import com.demo.utils.I18nUtil;
 import com.demo.vo.AccountVo;
+import com.demo.vo.FindpwdRecordVo;
 import com.demo.vo.MessageVo;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
@@ -23,14 +24,14 @@ import javax.servlet.http.HttpServletRequest;
 public class AccountController {
     private static final Logger logger = LoggerFactory.getLogger(DemoApplicationEntrance.class);
     private static final String LANGUAGE = "language";
+    private static final String TOKEN = "token";
 
     @Autowired
     private AccountService accountService;
 
     @PostMapping(path = "/account/register")
     public MessageVo register(AccountVo accountVo, HttpServletRequest request) {
-        //        String headerLanguage = request.getHeader(LANGUAGE);
-        String headerLanguage = "zh_CN";
+        String headerLanguage = request.getHeader(LANGUAGE);
         MessageVo vo = new MessageVo();
         vo.setUserName(accountVo.getName());
         try {
@@ -50,10 +51,9 @@ public class AccountController {
 
     @GetMapping(path = "/account/active")
     public MessageVo active(@RequestParam(name = "email") String email,
-                         @RequestParam(name = "activeCode") String activeCode,
-                         HttpServletRequest request) {
-        //        String headerLanguage = request.getHeader(LANGUAGE);
-        String headerLanguage = "zh_CN";
+                            @RequestParam(name = "activeCode") String activeCode,
+                            HttpServletRequest request) {
+        String headerLanguage = request.getHeader(LANGUAGE);
         MessageVo vo = new MessageVo();
         try {
             accountService.active(email, activeCode);
@@ -70,32 +70,58 @@ public class AccountController {
     }
 
     @PostMapping(path = "/account/login")
-    public String login(AccountVo vo,HttpServletRequest request) {
-        // 从SecurityUtils里边创建一个 subject
-        Subject subject = SecurityUtils.getSubject();
-        // 在认证提交前准备 token（令牌）
-        UsernamePasswordToken token = new UsernamePasswordToken(vo.getEmail(), vo.getPassword());
-        try {;
-            // 执行认证登陆
-            subject.login(token);
-        }catch (UnknownAccountException uae) {
-            return "未知账户";
-        } catch (IncorrectCredentialsException ice) {
-            return "密码不正确";
-        } catch (LockedAccountException lae) {
-            return "账户已锁定";
-        } catch (ExcessiveAttemptsException eae) {
-            return "用户名或密码错误次数过多";
-        } catch (AuthenticationException ae) {
-            return "用户名或密码不正确！";
-        }
-        if (subject.isAuthenticated()) {
-            return "登录成功";
-        } else {
-            token.clear();
-            return "登录失败";
+    public MessageVo login(AccountVo accountVo, HttpServletRequest request) {
+        String headerLanguage = request.getHeader(LANGUAGE);
+        try {
+            MessageVo messageVo = accountService.login(accountVo);
+            String sucMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.greeting);
+            messageVo.setResult(true);
+            messageVo.setMsg(sucMsg);
+            return messageVo;
+        } catch (Exception e) {
+            String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.loginFailure);
+            MessageVo messageVo =new MessageVo();
+            messageVo.setResult(false);
+            messageVo.setMsg(failMsg);
+            return messageVo;
         }
     }
 
+    @PostMapping(path = "/account/password/forget")
+    public MessageVo pwdForget(FindpwdRecordVo findpwdRecordVo, HttpServletRequest request) {
+        String headerLanguage = request.getHeader(LANGUAGE);
+        MessageVo messageVo =new MessageVo();
+        try {
+            accountService.forgetPassword(findpwdRecordVo);
+//            String sucMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.greeting);
+            messageVo.setResult(true);
+            messageVo.setMsg("密码重置链接邮件已发送到邮箱，请前往邮箱点击链接重置密码。");
+            return messageVo;
+        } catch (Exception e) {
+            logger.error("忘记密码处理失败",e);
+//            String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.loginFailure);
+            messageVo.setResult(false);
+            messageVo.setMsg("忘记密码处理失败。");
+            return messageVo;
+        }
+    }
+
+    @PostMapping(path = "/account/password/reset")
+    public MessageVo pwdReset(FindpwdRecordVo findpwdRecordVo, HttpServletRequest request) {
+        String headerLanguage = request.getHeader(LANGUAGE);
+        MessageVo messageVo =new MessageVo();
+        try {
+            accountService.forgetPassword(findpwdRecordVo);
+            String sucMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.greeting);
+            messageVo.setResult(true);
+            messageVo.setMsg(sucMsg);
+            return messageVo;
+        } catch (Exception e) {
+            String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.loginFailure);
+            messageVo.setResult(false);
+            messageVo.setMsg(failMsg);
+            return messageVo;
+        }
+    }
 }
 
