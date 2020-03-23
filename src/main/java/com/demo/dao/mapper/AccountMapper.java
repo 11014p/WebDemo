@@ -2,6 +2,7 @@ package com.demo.dao.mapper;
 
 import com.demo.model.Account;
 import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
@@ -71,6 +72,7 @@ public interface AccountMapper {
             "      </if>" +
             "    </trim>" +
             "</script>")
+    @Options(useGeneratedKeys=true,keyProperty="id",keyColumn="id")
     void insertAccount(Account account);
 
     @Update("<script> " +

@@ -2,13 +2,10 @@ package com.demo.controller;
 
 import com.demo.DemoApplicationEntrance;
 import com.demo.constants.I18nKeys;
-import com.demo.model.Account;
 import com.demo.service.AccountService;
-import com.demo.service.ExampleService;
 import com.demo.utils.I18nUtil;
-import com.demo.utils.RegexUtil;
-import com.google.common.base.Preconditions;
-import com.mysql.jdbc.StringUtils;
+import com.demo.vo.AccountVo;
+import com.demo.vo.MessageVo;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.subject.Subject;
@@ -21,9 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class AccountController {
@@ -34,45 +28,57 @@ public class AccountController {
     private AccountService accountService;
 
     @PostMapping(path = "/account/register")
-    public String register(Account account, HttpServletRequest request) {
+    public MessageVo register(AccountVo accountVo, HttpServletRequest request) {
         //        String headerLanguage = request.getHeader(LANGUAGE);
         String headerLanguage = "zh_CN";
-        try{
-            accountService.regesit(account);
+        MessageVo vo = new MessageVo();
+        vo.setUserName(accountVo.getName());
+        try {
+            accountVo.setRemoteIp(request.getRemoteHost());
+            accountService.regesit(accountVo);
             String sucMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.accountRegesitSuccess);
-            return sucMsg;
-        }catch(Exception e){
+            vo.setResult(true);
+            vo.setMsg(sucMsg);
+            return vo;
+        } catch (Exception e) {
             String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.accountRegesitFailure);
-            return failMsg;
+            vo.setResult(false);
+            vo.setMsg(failMsg);
+            return vo;
         }
     }
 
     @GetMapping(path = "/account/active")
-    public String active(@RequestParam(name = "email") String email,
+    public MessageVo active(@RequestParam(name = "email") String email,
                          @RequestParam(name = "activeCode") String activeCode,
                          HttpServletRequest request) {
         //        String headerLanguage = request.getHeader(LANGUAGE);
         String headerLanguage = "zh_CN";
-        try{
-            accountService.active(email,activeCode);
+        MessageVo vo = new MessageVo();
+        try {
+            accountService.active(email, activeCode);
             String sucMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.accountActiveSuccess);
-            return sucMsg;
-        }catch(Exception e){
+            vo.setResult(true);
+            vo.setMsg(sucMsg);
+            return vo;
+        } catch (Exception e) {
             String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.accountActiveFailure);
-            return failMsg;
+            vo.setResult(false);
+            vo.setMsg(failMsg);
+            return vo;
         }
     }
 
     @PostMapping(path = "/account/login")
-    public String login(Account account) {
+    public String login(AccountVo vo,HttpServletRequest request) {
         // 从SecurityUtils里边创建一个 subject
         Subject subject = SecurityUtils.getSubject();
         // 在认证提交前准备 token（令牌）
-        UsernamePasswordToken token = new UsernamePasswordToken(account.getEmail(), account.getPassword());
-        // 执行认证登陆
-        try {
+        UsernamePasswordToken token = new UsernamePasswordToken(vo.getEmail(), vo.getPassword());
+        try {;
+            // 执行认证登陆
             subject.login(token);
-        } catch (UnknownAccountException uae) {
+        }catch (UnknownAccountException uae) {
             return "未知账户";
         } catch (IncorrectCredentialsException ice) {
             return "密码不正确";
