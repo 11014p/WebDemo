@@ -11,6 +11,6 @@ public class ManMachineCheckVo implements Serializable{
     private String sig;
     private String token;
     private String scene;
-    private String appKey;
+    private String appKey="FFFF0N00000000008B49";
     private String remoteIp;
 }

@@ -18,7 +18,7 @@ import com.demo.model.EmailTemplate;
 import com.demo.service.AccountService;
 import com.demo.utils.EncryptUtil;
 import com.demo.utils.RegexUtil;
-import com.demo.utils.SendMail;
+import com.demo.utils.SendMailUtil;
 import com.demo.vo.AccountVo;
 import com.demo.vo.FindpwdRecordVo;
 import com.demo.vo.ManMachineCheckVo;
@@ -28,19 +28,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.mail.MessagingException;
+import java.security.GeneralSecurityException;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Service
 public class AccountServiceImpl implements AccountService {
     private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
     private static final String PRIVATE_KEY = "p@ssword#123";//私钥
-    //    private static final Map<String, Account> accountMap = AccountCache.getAccountMap();
     @Autowired
     private AccountCache accountCache;
     @Autowired
@@ -64,7 +61,8 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void regesit(AccountVo accountVo) throws ClientException {
+    @Transactional
+    public void regesit(AccountVo accountVo) throws ClientException, MessagingException, GeneralSecurityException {
         //类型转换
         Account account = convertAccountVo(accountVo);
         //非空和邮箱格式校验
@@ -92,8 +90,7 @@ public class AccountServiceImpl implements AccountService {
         String url = "http://localhost:8080/account/active?email=" + account.getEmail()
                 + "&activeCode=" + EncryptUtil.getSoltMd5(account.getEmail().trim(), PRIVATE_KEY);
         template.setContent("请点击下面链接进行账号激活：<a href='" + url + "'>" + url + "</a>");
-        SendMail sendMail = new SendMail(template);
-        sendMail.start();
+        SendMailUtil.sendEmail(template);
         logger.info("insert account into database success,[{}]", account);
     }
 
@@ -140,7 +137,8 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void forgetPassword(FindpwdRecordVo findpwdRecordVo) throws ClientException {
+    @Transactional
+    public void forgetPassword(FindpwdRecordVo findpwdRecordVo) throws ClientException, MessagingException, GeneralSecurityException {
         //邮箱格式校验
         checkEmailPattern(findpwdRecordVo.getEmail());
         //人机验证
@@ -169,8 +167,7 @@ public class AccountServiceImpl implements AccountService {
         String url = "http://localhost:8080/account/password/reset?id="+record.getId()+"&email=" + record.getAccountEmail()
                 + "&findpwdToken=" + record.getToken();
         template.setContent("您正通过邮箱重置xx平台密码的登录密码，请点击下面的链接重置密码：<a href='" + url + "'>" + url + "</a>");
-        SendMail sendMail = new SendMail(template);
-        sendMail.start();
+        SendMailUtil.sendEmail(template);
         logger.info("insert account_findpwd_record into database success,[{}]", findpwdRecordVo);
     }
 
@@ -202,6 +199,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private void checkManMachine(ManMachineCheckVo vo) throws ClientException {
+        logger.info("man machine check params[{}]",vo);
 //        AuthenticateSigRequest request = new AuthenticateSigRequest();
 //        //会话ID。必填参数，从前端获取，不可更改。
 //        request.setSessionId(vo.getSessionId());

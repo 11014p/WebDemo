@@ -1,10 +1,12 @@
 package com.demo.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.*;
 
 /**
  * 演示Java的国际化
@@ -12,33 +14,30 @@ import java.util.ResourceBundle;
  * @author Abu
  */
 public class I18nUtil {
-    public static String getI18nMessage(String language, String key) {
-        // 设置定制的语言国家代码
-        Locale locale = null;
-        if (StringUtils.isEmpty(language)) {
-            locale = Locale.getDefault();
-        } else {
-            locale = new Locale(language);
+    private static final Logger logger = LoggerFactory.getLogger(I18nUtil.class);
+
+    private static String language_zh="zh";
+    private static String message_zh_path="/message_zh.properties";
+    private static String language_en="en";
+    private static String message_en_path="/message_en.properties";
+    private static Map<String,Properties> messageMap=new HashMap();
+    //init
+    static {
+        try {
+            Properties zhProperties=new Properties();
+            zhProperties.load(I18nUtil.class.getResourceAsStream(message_zh_path));
+            messageMap.put(language_zh,zhProperties);
+
+            Properties enProperties=new Properties();
+            enProperties.load(I18nUtil.class.getResourceAsStream(message_en_path));
+            messageMap.put(language_en,enProperties);
+        } catch (IOException e) {
+            logger.error("message properties init failure.",e);
         }
-        // 获得资源文件
-        ResourceBundle rb = ResourceBundle.getBundle("message", locale);
-        // 获得相应的key值
-        return rb.getString(key);
+    }
+    public static String getI18nMessage(String language, String key) {
+        Properties properties = messageMap.get(language);
+        return properties.get(key).toString();
     }
 
-    public static String getI18nMessage(String language, String key, Object[] params) {
-        // 设置定制的语言国家代码
-        Locale locale = null;
-        if (StringUtils.isEmpty(language)) {
-            locale = Locale.getDefault();
-        } else {
-            locale = new Locale(language);
-        }
-        // 获得资源文件
-        ResourceBundle rb = ResourceBundle.getBundle("message", locale);
-        // 获得相应的key值
-        String value = rb.getString(key);
-        // 格式化参数,返回格式后的字符串
-        return MessageFormat.format(value, params);
-    }
 }

@@ -1,41 +1,34 @@
 package com.demo.utils;
 
 import com.demo.model.EmailTemplate;
+import com.sun.mail.util.MailSSLSocketFactory;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.security.GeneralSecurityException;
 import java.util.Properties;
 
-public class SendMail extends Thread {
+public class SendMailUtil {
 
     //用于给用户发送邮件的邮箱
-    private String emailFrom = "345303441@qq.com";
+    private static String emailFrom = "345303441@qq.com";
     //邮箱授权码(修改密码会导致授权码过期)
-    private String authKey = "doljblzhsullcagc";
+    private static String authKey = "doljblzhsullcagc";
     //发送邮件的服务器地址
-    private String smtpHost = "smtp.qq.com";
+    private static String smtpHost = "smtp.qq.com";
 
-    private EmailTemplate emailTemplate;
-
-    public SendMail(EmailTemplate emailTemplate) {
-        this.emailTemplate = emailTemplate;
-    }
-
-    //重写run方法的实现，在run方法中发送邮件给指定的用户
-    @Override
-    public void run() {
-        try {
+    public static void sendEmail(EmailTemplate emailTemplate) throws MessagingException, GeneralSecurityException {
             Properties prop = new Properties();
             prop.setProperty("mail.smtp.host", smtpHost);
             prop.setProperty("mail.transport.protocol", "smtp");
             prop.setProperty("mail.smtp.auth", "true");
-//
-//            // 关于QQ邮箱，还要设置SSL加密，加上以下代码即可
-//            MailSSLSocketFactory sf = new MailSSLSocketFactory();
-//            sf.setTrustAllHosts(true);
-//            prop.put("mail.smtp.ssl.enable", "true");
-//            prop.put("mail.smtp.ssl.socketFactory", sf);
+
+            // 关于QQ邮箱，还要设置SSL加密，加上以下代码即可
+            MailSSLSocketFactory sf = new MailSSLSocketFactory();
+            sf.setTrustAllHosts(true);
+            prop.put("mail.smtp.ssl.enable", "true");
+            prop.put("mail.smtp.ssl.socketFactory", sf);
 
             //1、创建定义整个应用程序所需的环境信息的 Session 对象
             Session session = Session.getDefaultInstance(prop, new Authenticator() {
@@ -82,18 +75,5 @@ public class SendMail extends Thread {
             //发送邮件
             ts.sendMessage(message, message.getAllRecipients());
             ts.close();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void main(String[] args) throws InterruptedException {
-        EmailTemplate template=new EmailTemplate();
-        template.setToAddress("zhujianan162@163.com");
-        template.setSubject("邮件测试2");
-        template.setContent("详细信息：<a href='http://www.baidu.com'>http://www.baidu.com</a>");
-        SendMail sendMail=new SendMail(template);
-        sendMail.start();
-        Thread.sleep(2000);
     }
 }

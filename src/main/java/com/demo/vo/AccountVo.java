@@ -12,11 +12,4 @@ public class AccountVo extends ManMachineCheckVo{
     //密码
     private String password;
 
-    //人机验证参数
-    private String sessionId;
-    private String sig;
-    private String token;
-    private String scene;
-    private String appKey;
-    private String remoteIp;
 }
