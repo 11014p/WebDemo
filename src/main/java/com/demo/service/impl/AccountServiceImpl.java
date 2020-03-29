@@ -2,12 +2,9 @@ package com.demo.service.impl;
 
 import com.aliyuncs.DefaultAcsClient;
 import com.aliyuncs.IAcsClient;
-import com.aliyuncs.afs.model.v20180112.AuthenticateSigRequest;
-import com.aliyuncs.afs.model.v20180112.AuthenticateSigResponse;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
-import com.demo.cache.AccountCache;
 import com.demo.dao.mapper.AccountFindpwdRecordMapper;
 import com.demo.dao.mapper.AccountMapper;
 import com.demo.enums.ActiveEnum;
@@ -38,8 +35,6 @@ import java.util.Date;
 public class AccountServiceImpl implements AccountService {
     private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
     private static final String PRIVATE_KEY = "p@ssword#123";//私钥
-    @Autowired
-    private AccountCache accountCache;
     @Autowired
     private AccountMapper accountMapper;
     @Autowired
@@ -81,15 +76,13 @@ public class AccountServiceImpl implements AccountService {
         account.setIsDel(DelEnum.N);
         //保存到数据库
         accountMapper.insertAccount(account);
-        //更新缓存
-        accountCache.getAccountMap().put(account.getEmail(), account);
         //发送邮件
         EmailTemplate template = new EmailTemplate();
         template.setToAddress(account.getEmail());
         template.setSubject("账号激活");
-        String url = "http://localhost:8080/account/active?email=" + account.getEmail()
-                + "&activeCode=" + EncryptUtil.getSoltMd5(account.getEmail().trim(), PRIVATE_KEY);
-        template.setContent("请点击下面链接进行账号激活：<a href='" + url + "'>" + url + "</a>");
+        String url = "http://localhost/account/active?email=" + account.getEmail()
+                + "&token=" + getToken(new String[]{account.getName(), account.getEmail(), account.getPassword(), account.getUpdateTime().toString()});
+        template.setContent(getRegesitEmailContent(url));
         SendMailUtil.sendEmail(template);
         logger.info("insert account into database success,[{}]", account);
     }
@@ -103,20 +96,18 @@ public class AccountServiceImpl implements AccountService {
             //校验失败
             throw new RuntimeException("account active faile,url has been changed.");
         }
-        Account account = accountCache.getAccountMap().get(email);
+        Account account = accountMapper.getAccountByEmail(email);
         Preconditions.checkNotNull(account, "account from accountMap cache is null.");
         account.setUpdateTime(new Date());
         account.setIsActive(ActiveEnum.A);
         //账号激活
         accountMapper.updateAccount(account);
-        //更新缓存
-        accountCache.getAccountMap().put(email, account);
         logger.info("account active success.");
     }
 
     @Override
     public MessageVo login(AccountVo accountVo) throws ClientException {
-        MessageVo messageVo=new MessageVo();
+        MessageVo messageVo = new MessageVo();
         //类型转换
         Account account = convertAccountVo(accountVo);
         //非空和邮箱格式校验
@@ -124,11 +115,11 @@ public class AccountServiceImpl implements AccountService {
         //人机校验
         checkManMachine(accountVo);
         //登录业务处理(账号不存在、非激活状态、用户名和密码错误，都抛异常)
-        Account ac = accountCache.getAccountMap().get(accountVo.getEmail());
+        Account ac = accountMapper.getAccountByEmail(accountVo.getEmail());
         if (ac == null || ac.getIsActive().equals(ActiveEnum.I)
                 || !(account.getEmail().equals(ac.getEmail()) && account.getPassword().equals(ac.getPassword()))) {
             //验证失败
-            logger.error("account login failure,account[{}] is not exit or actived.",account);
+            logger.error("account login failure,account[{}] is not exit or actived.", account);
             throw new RuntimeException("account login failure,account is not exit or actived.");
         }
         messageVo.setToken(EncryptUtil.getMd5(ac.getEmail().trim()));
@@ -138,22 +129,22 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    public void forgetPassword(FindpwdRecordVo findpwdRecordVo) throws ClientException, MessagingException, GeneralSecurityException {
+    public void passwordForget(FindpwdRecordVo findpwdRecordVo) throws ClientException, MessagingException, GeneralSecurityException {
         //邮箱格式校验
         checkEmailPattern(findpwdRecordVo.getEmail());
         //人机验证
         checkManMachine(findpwdRecordVo);
         //业务处理
-        Account account = accountCache.getAccountMap().get(findpwdRecordVo.getEmail());
-        Preconditions.checkNotNull(account,"email["+findpwdRecordVo.getEmail()+"] doesn't exit in database.");
-        AccountFindpwdRecord record=new AccountFindpwdRecord();
+        Account account = accountMapper.getAccountByEmail(findpwdRecordVo.getEmail());
+        Preconditions.checkNotNull(account, "email[" + findpwdRecordVo.getEmail() + "] doesn't exit in database.");
+        AccountFindpwdRecord record = new AccountFindpwdRecord();
         Date createTime = new Date();
         Date expiryTime = new Date();
-        expiryTime.setTime(createTime.getTime()+30*60*1000);
+        expiryTime.setTime(createTime.getTime() + 30 * 60 * 1000);
         record.setAccountId(account.getId());
         record.setAccountName(account.getName());
         record.setAccountEmail(account.getEmail());
-        record.setToken(EncryptUtil.getSoltMd5(account.getEmail(),Math.random()+""));
+        record.setToken(getToken(new String[]{account.getName(),account.getEmail(),account.getPassword(),System.currentTimeMillis()+""}));
         record.setCreateTime(createTime);
         //凭证有效期30分钟
         record.setExpiryTime(expiryTime);
@@ -164,11 +155,33 @@ public class AccountServiceImpl implements AccountService {
         EmailTemplate template = new EmailTemplate();
         template.setToAddress(account.getEmail());
         template.setSubject("密码重置");
-        String url = "http://localhost:8080/account/password/reset?id="+record.getId()+"&email=" + record.getAccountEmail()
-                + "&findpwdToken=" + record.getToken();
+        String url = "http://localhost/account/password/reset?token=" + record.getToken();
         template.setContent("您正通过邮箱重置xx平台密码的登录密码，请点击下面的链接重置密码：<a href='" + url + "'>" + url + "</a>");
         SendMailUtil.sendEmail(template);
         logger.info("insert account_findpwd_record into database success,[{}]", findpwdRecordVo);
+    }
+
+    @Override
+    @Transactional
+    public void passwordReset(FindpwdRecordVo findpwdRecordVo) throws ClientException, MessagingException, GeneralSecurityException {
+        Preconditions.checkArgument(findpwdRecordVo!=null && findpwdRecordVo.getMyToken()!=null,"token is null.");
+        AccountFindpwdRecord record = accountFindpwdRecordMapper.getRecordByToken(findpwdRecordVo.getMyToken());
+        if(record==null){
+            throw new RuntimeException("token 无效.");
+        }
+        if(record.getIsExpiried()==1
+                ||new Date().compareTo(record.getExpiryTime())>0){
+            throw new RuntimeException("token已失效，已使用或则超过有效期(30分钟).");
+        }
+        //失效
+        record.setIsExpiried(1);
+        accountFindpwdRecordMapper.updateRecord(record);
+        Account account = accountMapper.getAccountByEmail(findpwdRecordVo.getEmail());
+        //重置密码
+        account.setPassword(EncryptUtil.getSoltMd5(findpwdRecordVo.getPassword(), PRIVATE_KEY));
+        account.setUpdateTime(new Date());
+        accountMapper.updateAccount(account);
+        logger.info("password reset success.");
     }
 
     private void checkAccountValues(Account account) {
@@ -182,7 +195,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     //邮箱格式校验
-    private void checkEmailPattern(String email){
+    private void checkEmailPattern(String email) {
         //邮箱格式校验
         if (!RegexUtil.checkEmailPattern(email)) {
             logger.error("email pattern check failure,please check email:{}.", email);
@@ -192,14 +205,21 @@ public class AccountServiceImpl implements AccountService {
 
     //邮箱重复校验
     private void checkMultiEmail(String email) {
-        if (accountCache.getAccountMap().containsKey(email)) {
+        Account account = accountMapper.getAccountByEmail(email);
+        if (account != null) {
             logger.error("multi email in database,email:{}.", email);
             throw new RuntimeException("multi email in database,email:" + email);
         }
     }
 
     private void checkManMachine(ManMachineCheckVo vo) throws ClientException {
-        logger.info("man machine check params[{}]",vo);
+//        logger.info("man machine check params[{}]",vo);
+//        if(vo==null || StringUtils.isEmpty(vo.getSessionId())
+//                || StringUtils.isEmpty(vo.getSig())
+//                || StringUtils.isEmpty(vo.getToken())
+//                || StringUtils.isEmpty(vo.getScene())){
+//            throw new ClientException("man machine check param is null.");
+//        }
 //        AuthenticateSigRequest request = new AuthenticateSigRequest();
 //        //会话ID。必填参数，从前端获取，不可更改。
 //        request.setSessionId(vo.getSessionId());
@@ -232,4 +252,29 @@ public class AccountServiceImpl implements AccountService {
         return account;
     }
 
+    //生成token
+    private String getToken(String... args) {
+        StringBuffer buffer = new StringBuffer();
+        for (String arg : args) {
+            buffer.append(EncryptUtil.getMd5(arg));
+        }
+        return buffer.toString();
+    }
+
+    private String getRegesitEmailContent(String url) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("<div style='color:blue'>")
+                .append("<h1>You are on your way!</h1>")
+                .append("<h1> 差一点就完成了！</h1>")
+                .append("<h1>あと少しです！</h1>")
+                .append("")
+                .append("<p>Please click the link below to authenticate your email.</p>")
+                .append("<p>请点击以下链接认证邮件。</p>")
+                .append("<p>以下のリンクをクリックしてメールアドレスを認証します。</p>")
+                .append("")
+                .append("<a href=" + url + "><button>Confirm/确认/認証</button></a>")
+                .append("</div>");
+        return buffer.toString();
+    }
 }
+

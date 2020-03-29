@@ -9,7 +9,7 @@ public class FindpwdRecordVo extends ManMachineCheckVo{
     //邮箱
     private String email;
     //凭证
-    private String findpwdToken;
+    private String myToken;
     //密码
     private String password;
 

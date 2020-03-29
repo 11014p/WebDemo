@@ -2,6 +2,7 @@ package com.demo.controller;
 
 import com.alibaba.druid.support.json.JSONUtils;
 import com.alibaba.fastjson.JSON;
+import com.aliyuncs.exceptions.ClientException;
 import com.demo.DemoApplicationEntrance;
 import com.demo.constants.I18nKeys;
 import com.demo.service.AccountService;
@@ -31,8 +32,8 @@ public class AccountController {
     @PostMapping(path = "/account/register")
     public MessageVo register(@RequestBody AccountVo accountVo, HttpServletRequest request) {
         String headerLanguage = request.getHeader(LANGUAGE);
-        logger.info("headerLanguage:{}",headerLanguage);
-        logger.info("register accountVo:{}",accountVo);
+        logger.info("headerLanguage:{}", headerLanguage);
+        logger.info("register accountVo:{}", accountVo);
         MessageVo vo = new MessageVo();
         vo.setUserName(accountVo.getName());
         try {
@@ -42,8 +43,14 @@ public class AccountController {
             vo.setResult(true);
             vo.setMsg(sucMsg);
             return vo;
+        } catch (ClientException e) {
+            logger.error("register error", e);
+            String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.manMachineCheckFailure);
+            vo.setResult(false);
+            vo.setMsg(failMsg);
+            return vo;
         } catch (Exception e) {
-            logger.error("register error",e);
+            logger.error("register error", e);
             String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.accountRegesitFailure);
             vo.setResult(false);
             vo.setMsg(failMsg);
@@ -56,8 +63,8 @@ public class AccountController {
                             @RequestParam(name = "activeCode") String activeCode,
                             HttpServletRequest request) {
         String headerLanguage = request.getHeader(LANGUAGE);
-        logger.info("headerLanguage:{}",headerLanguage);
-        logger.info("active email:{},activeCode{}",email,activeCode);
+        logger.info("headerLanguage:{}", headerLanguage);
+        logger.info("active email:{},activeCode{}", email, activeCode);
         MessageVo vo = new MessageVo();
         try {
             accountService.active(email, activeCode);
@@ -66,7 +73,7 @@ public class AccountController {
             vo.setMsg(sucMsg);
             return vo;
         } catch (Exception e) {
-            logger.error("active error",e);
+            logger.error("active error", e);
             String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.accountActiveFailure);
             vo.setResult(false);
             vo.setMsg(failMsg);
@@ -77,18 +84,25 @@ public class AccountController {
     @PostMapping(path = "/account/login")
     public MessageVo login(@RequestBody AccountVo accountVo, HttpServletRequest request) {
         String headerLanguage = request.getHeader(LANGUAGE);
-        logger.info("login accountVo:{}",accountVo);
-        logger.info("headerLanguage:{}",headerLanguage);
+        logger.info("login accountVo:{}", accountVo);
+        logger.info("headerLanguage:{}", headerLanguage);
         try {
             MessageVo messageVo = accountService.login(accountVo);
             String sucMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.greeting);
             messageVo.setResult(true);
             messageVo.setMsg(sucMsg);
             return messageVo;
+        } catch (ClientException e) {
+            logger.error("register error", e);
+            String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.manMachineCheckFailure);
+            MessageVo messageVo = new MessageVo();
+            messageVo.setResult(false);
+            messageVo.setMsg(failMsg);
+            return messageVo;
         } catch (Exception e) {
-            logger.error("login error",e);
+            logger.error("login error", e);
             String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.loginFailure);
-            MessageVo messageVo =new MessageVo();
+            MessageVo messageVo = new MessageVo();
             messageVo.setResult(false);
             messageVo.setMsg(failMsg);
             return messageVo;
@@ -98,17 +112,17 @@ public class AccountController {
     @PostMapping(path = "/account/password/forget")
     public MessageVo pwdForget(@RequestBody FindpwdRecordVo findpwdRecordVo, HttpServletRequest request) {
         String headerLanguage = request.getHeader(LANGUAGE);
-        logger.info("headerLanguage:{}",headerLanguage);
-        logger.info("forget findpwdRecordVo:{}",findpwdRecordVo);
-        MessageVo messageVo =new MessageVo();
+        logger.info("headerLanguage:{}", headerLanguage);
+        logger.info("forget findpwdRecordVo:{}", findpwdRecordVo);
+        MessageVo messageVo = new MessageVo();
         try {
-            accountService.forgetPassword(findpwdRecordVo);
+            accountService.passwordForget(findpwdRecordVo);
 //            String sucMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.greeting);
             messageVo.setResult(true);
             messageVo.setMsg("密码重置链接邮件已发送到邮箱，请前往邮箱点击链接重置密码。");
             return messageVo;
         } catch (Exception e) {
-            logger.error("pwd forget error",e);
+            logger.error("pwd forget error", e);
 //            String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.loginFailure);
             messageVo.setResult(false);
             messageVo.setMsg("忘记密码处理失败。");
@@ -119,16 +133,16 @@ public class AccountController {
     @PostMapping(path = "/account/password/reset")
     public MessageVo pwdReset(@RequestBody FindpwdRecordVo findpwdRecordVo, HttpServletRequest request) {
         String headerLanguage = request.getHeader(LANGUAGE);
-        logger.info("headerLanguage:{}",headerLanguage);
-        MessageVo messageVo =new MessageVo();
+        logger.info("headerLanguage:{}", headerLanguage);
+        MessageVo messageVo = new MessageVo();
         try {
-            accountService.forgetPassword(findpwdRecordVo);
+            accountService.passwordReset(findpwdRecordVo);
             String sucMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.greeting);
             messageVo.setResult(true);
             messageVo.setMsg(sucMsg);
             return messageVo;
         } catch (Exception e) {
-            logger.error("pwd reset",e);
+            logger.error("pwd reset", e);
             String failMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.loginFailure);
             messageVo.setResult(false);
             messageVo.setMsg(failMsg);

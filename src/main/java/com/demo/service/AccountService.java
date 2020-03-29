@@ -20,5 +20,8 @@ public interface AccountService {
     MessageVo login(AccountVo accountVo) throws ClientException;
 
     //忘记密码
-    void forgetPassword(FindpwdRecordVo findpwdRecordVo) throws ClientException, MessagingException, GeneralSecurityException;
+    void passwordForget(FindpwdRecordVo findpwdRecordVo) throws ClientException, MessagingException, GeneralSecurityException;
+
+    //重置密码
+    void passwordReset(FindpwdRecordVo findpwdRecordVo) throws ClientException, MessagingException, GeneralSecurityException;
 }
