@@ -14,7 +14,7 @@ public interface AccountService {
     void regesit(AccountVo accountVo) throws ClientException, MessagingException, GeneralSecurityException;
 
     //用户激活
-    void active(String email,String activeCode);
+    void active(AccountVo accountVo);
 
     //用户登录
     MessageVo login(AccountVo accountVo) throws ClientException;

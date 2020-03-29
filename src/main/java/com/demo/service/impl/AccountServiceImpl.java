@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
 import java.security.GeneralSecurityException;
+import java.util.Base64;
 import java.util.Date;
 
 @Service
@@ -80,24 +81,23 @@ public class AccountServiceImpl implements AccountService {
         EmailTemplate template = new EmailTemplate();
         template.setToAddress(account.getEmail());
         template.setSubject("账号激活");
-        String url = "http://localhost/account/active?email=" + account.getEmail()
-                + "&token=" + getToken(new String[]{account.getName(), account.getEmail(), account.getPassword(), account.getUpdateTime().toString()});
+        String url = "http://localhost:9621/#/active?email=" + account.getEmail()
+                + "&myToken=" + getToken(new String[]{account.getName(), account.getEmail(), account.getPassword(), account.getUpdateTime().toString()});
         template.setContent(getRegesitEmailContent(url));
         SendMailUtil.sendEmail(template);
         logger.info("insert account into database success,[{}]", account);
     }
 
     @Override
-    public void active(String email, String activeCode) {
-        //md5校验(去空格)
-        String soltMd5 = EncryptUtil.getSoltMd5(email.trim(), PRIVATE_KEY);
-        if (!soltMd5.equals(activeCode)) {
-            logger.error("account active faile,url has been changed.");
+    public void active(AccountVo accountVo) {
+        Account account = accountMapper.getAccountByEmail(accountVo.getEmail());
+        Preconditions.checkNotNull(account,"account in db is null.email:"+accountVo.getEmail());
+        String token=getToken(new String[]{account.getName(),account.getEmail(),account.getPassword(),account.getUpdateTime().toString()});
+        if (!token.equals(accountVo.getMyToken())) {
+            logger.error("account active faile,activeCode has been changed.");
             //校验失败
-            throw new RuntimeException("account active faile,url has been changed.");
+            throw new RuntimeException("account active faile,activeCode has been changed.");
         }
-        Account account = accountMapper.getAccountByEmail(email);
-        Preconditions.checkNotNull(account, "account from accountMap cache is null.");
         account.setUpdateTime(new Date());
         account.setIsActive(ActiveEnum.A);
         //账号激活
@@ -155,7 +155,7 @@ public class AccountServiceImpl implements AccountService {
         EmailTemplate template = new EmailTemplate();
         template.setToAddress(account.getEmail());
         template.setSubject("密码重置");
-        String url = "http://localhost/account/password/reset?token=" + record.getToken();
+        String url = "http://localhost/#/password/reset?myToken=" + record.getToken();
         template.setContent("您正通过邮箱重置xx平台密码的登录密码，请点击下面的链接重置密码：<a href='" + url + "'>" + url + "</a>");
         SendMailUtil.sendEmail(template);
         logger.info("insert account_findpwd_record into database success,[{}]", findpwdRecordVo);
@@ -258,7 +258,8 @@ public class AccountServiceImpl implements AccountService {
         for (String arg : args) {
             buffer.append(EncryptUtil.getMd5(arg));
         }
-        return buffer.toString();
+        //去掉特殊字符，否则url在浏览器中打开有问题
+        return Base64.getUrlEncoder().encodeToString(buffer.toString().getBytes());
     }
 
     private String getRegesitEmailContent(String url) {

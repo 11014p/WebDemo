@@ -58,16 +58,15 @@ public class AccountController {
         }
     }
 
-    @GetMapping(path = "/account/active")
-    public MessageVo active(@RequestParam(name = "email") String email,
-                            @RequestParam(name = "activeCode") String activeCode,
+    @PostMapping(path = "/account/active")
+    public MessageVo active(@RequestBody AccountVo accountVo,
                             HttpServletRequest request) {
         String headerLanguage = request.getHeader(LANGUAGE);
         logger.info("headerLanguage:{}", headerLanguage);
-        logger.info("active email:{},activeCode{}", email, activeCode);
+        logger.info("account active:", accountVo);
         MessageVo vo = new MessageVo();
         try {
-            accountService.active(email, activeCode);
+            accountService.active(accountVo);
             String sucMsg = I18nUtil.getI18nMessage(headerLanguage, I18nKeys.accountActiveSuccess);
             vo.setResult(true);
             vo.setMsg(sucMsg);
