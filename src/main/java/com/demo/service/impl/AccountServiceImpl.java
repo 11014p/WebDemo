@@ -91,8 +91,8 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void active(AccountVo accountVo) {
         Account account = accountMapper.getAccountByEmail(accountVo.getEmail());
-        Preconditions.checkNotNull(account,"account in db is null.email:"+accountVo.getEmail());
-        String token=getToken(new String[]{account.getName(),account.getEmail(),account.getPassword(),account.getUpdateTime().toString()});
+        Preconditions.checkNotNull(account, "account in db is null.email:" + accountVo.getEmail());
+        String token = getToken(new String[]{account.getName(), account.getEmail(), account.getPassword(), account.getUpdateTime().toString()});
         if (!token.equals(accountVo.getMyToken())) {
             logger.error("account active faile,activeCode has been changed.");
             //校验失败
@@ -144,7 +144,7 @@ public class AccountServiceImpl implements AccountService {
         record.setAccountId(account.getId());
         record.setAccountName(account.getName());
         record.setAccountEmail(account.getEmail());
-        record.setToken(getToken(new String[]{account.getName(),account.getEmail(),account.getPassword(),System.currentTimeMillis()+""}));
+        record.setToken(getToken(new String[]{account.getName(), account.getEmail(), account.getPassword(), System.currentTimeMillis() + ""}));
         record.setCreateTime(createTime);
         //凭证有效期30分钟
         record.setExpiryTime(expiryTime);
@@ -156,7 +156,7 @@ public class AccountServiceImpl implements AccountService {
         template.setToAddress(account.getEmail());
         template.setSubject("密码重置");
         String url = "http://localhost/#/password/reset?myToken=" + record.getToken();
-        template.setContent("您正通过邮箱重置xx平台密码的登录密码，请点击下面的链接重置密码：<a href='" + url + "'>" + url + "</a>");
+        template.setContent(getRegesitEmailContent(url));
         SendMailUtil.sendEmail(template);
         logger.info("insert account_findpwd_record into database success,[{}]", findpwdRecordVo);
     }
@@ -164,13 +164,13 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public void passwordReset(FindpwdRecordVo findpwdRecordVo) throws ClientException, MessagingException, GeneralSecurityException {
-        Preconditions.checkArgument(findpwdRecordVo!=null && findpwdRecordVo.getMyToken()!=null,"token is null.");
+        Preconditions.checkArgument(findpwdRecordVo != null && findpwdRecordVo.getMyToken() != null, "token is null.");
         AccountFindpwdRecord record = accountFindpwdRecordMapper.getRecordByToken(findpwdRecordVo.getMyToken());
-        if(record==null){
+        if (record == null) {
             throw new RuntimeException("token 无效.");
         }
-        if(record.getIsExpiried()==1
-                ||new Date().compareTo(record.getExpiryTime())>0){
+        if (record.getIsExpiried() == 1
+                || new Date().compareTo(record.getExpiryTime()) > 0) {
             throw new RuntimeException("token已失效，已使用或则超过有效期(30分钟).");
         }
         //失效
@@ -263,18 +263,70 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private String getRegesitEmailContent(String url) {
+        StringBuffer buffer = new StringBuffer(getStyleCss());
+        buffer.append("<body>")
+                .append("<div class='outdisplay'>")
+                .append("<div style='margin-bottom:50px;margin-top: 40px;'>" +
+                        "     <strong class='title'>You are on your way!</strong>" +
+                        "     <strong class='title'> 差一点就完成了！</strong>" +
+                        "     <strong class='title'>あと少しです！</strong>" +
+                        "</div>")
+                .append("<div style='margin-bottom: 30px;'>" +
+                        "     <p class='content'>Please click the link below to authenticate your email.</p>" +
+                        "     <p class='content'>请点击以下链接认证邮件。</p>" +
+                        "     <p class='content'>以下のリンクをクリックしてメールアドレスを認証します。</p>" +
+                        "</div>")
+                .append("<div style='margin-bottom: 20px;'>" +
+                        "     <a href=" + url + "><button class='confirmbutton'>Confirm/确认/認証</button></a>" +
+                        "</div>")
+                .append("<div class='linebottom'>" +
+                        "     <div style='float: right;'>" +
+                        "          <span style='color: rgb(143, 143, 143);'>2020</span>" +
+                        "          <a href='http://www.baidu.com'><span style='color: blue;'>ugogo</span></a>" +
+                        "     </div>" +
+                        "</div>")
+                .append("</div>")
+                .append("</body>");
+        return buffer.toString();
+    }
+
+    private String getStyleCss() {
         StringBuffer buffer = new StringBuffer();
-        buffer.append("<div style='color:blue'>")
-                .append("<h1>You are on your way!</h1>")
-                .append("<h1> 差一点就完成了！</h1>")
-                .append("<h1>あと少しです！</h1>")
-                .append("")
-                .append("<p>Please click the link below to authenticate your email.</p>")
-                .append("<p>请点击以下链接认证邮件。</p>")
-                .append("<p>以下のリンクをクリックしてメールアドレスを認証します。</p>")
-                .append("")
-                .append("<a href=" + url + "><button>Confirm/确认/認証</button></a>")
-                .append("</div>");
+        buffer.append("<style>")
+                .append(".outdisplay{" +
+                        "margin: 0 auto;" +
+                        "width: 100%;" +
+                        "max-width:600px;" +
+                        "color:#366eed}")
+                .append(".title{" +
+                        "margin: 1px auto;" +
+                        "font-size: 36px;" +
+                        "display: block;}")
+                .append(".linebottom{" +
+                        "padding:20px 0px 20px 0px;" +
+                        "line-height:20px;" +
+                        "border-top: 2px solid rgba(189, 188, 188, 0.3);}")
+                .append(".content{" +
+                        "font-size: 15px;" +
+                        "margin: 1px auto;}")
+                .append(".confirmbutton{" +
+                        "cursor: pointer;" +
+                        "background-color:#366EED;" +
+                        "border:1px solid #333333;" +
+                        "border-color:#366EED;" +
+                        "border-radius:4px;" +
+                        "border-width:0px;" +
+                        "color:#ffffff;" +
+                        "display:inline-block;" +
+                        "font-family:arial,helvetica,sans-serif;" +
+                        "font-size:20px;" +
+                        "font-weight:normal;" +
+                        "letter-spacing:0px;" +
+                        "line-height:40px;" +
+                        "padding:10px 20px 10px 20px;" +
+                        "text-align:center;" +
+                        "text-decoration:none}")
+                .append("</style>");
         return buffer.toString();
     }
 }
