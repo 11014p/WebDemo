@@ -84,8 +84,13 @@ public class EncryptUtil {
         return null;
     }
 
-    public static void main(String[] args) {
-        String PRIVATE_KEY = "p@ssword#123";//私钥
-        System.out.println(getSoltMd5("zhujianan162@163.com", PRIVATE_KEY));
+    //生成token
+    public static String getToken(String... args) {
+        StringBuffer buffer = new StringBuffer();
+        for (String arg : args) {
+            buffer.append(getMd5(arg));
+        }
+        //去掉特殊字符，否则url在浏览器中打开有问题
+        return java.util.Base64.getUrlEncoder().encodeToString(buffer.toString().getBytes());
     }
 }

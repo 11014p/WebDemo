@@ -9,6 +9,8 @@ import com.demo.dao.mapper.AccountFindpwdRecordMapper;
 import com.demo.dao.mapper.AccountMapper;
 import com.demo.enums.ActiveEnum;
 import com.demo.enums.DelEnum;
+import com.demo.listner.event.PwdFindEvent;
+import com.demo.listner.event.RegesitSuccessEvent;
 import com.demo.model.Account;
 import com.demo.model.AccountFindpwdRecord;
 import com.demo.model.EmailTemplate;
@@ -24,18 +26,20 @@ import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
 import java.security.GeneralSecurityException;
-import java.util.Base64;
 import java.util.Date;
 
 @Service
 public class AccountServiceImpl implements AccountService {
     private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
     private static final String PRIVATE_KEY = "p@ssword#123";//私钥
+    @Autowired
+    private ApplicationContext applicationContext;
     @Autowired
     private AccountMapper accountMapper;
     @Autowired
@@ -77,14 +81,8 @@ public class AccountServiceImpl implements AccountService {
         account.setIsDel(DelEnum.N);
         //保存到数据库
         accountMapper.insertAccount(account);
-        //发送邮件
-        EmailTemplate template = new EmailTemplate();
-        template.setToAddress(account.getEmail());
-        template.setSubject("账号激活");
-        String url = "http://localhost:9621/#/active?email=" + account.getEmail()
-                + "&myToken=" + getToken(new String[]{account.getName(), account.getEmail(), account.getPassword(), account.getUpdateTime().toString()});
-        template.setContent(getRegesitEmailContent(url));
-        SendMailUtil.sendEmail(template);
+        //发布注册成功事件
+        applicationContext.publishEvent(new RegesitSuccessEvent(account));
         logger.info("insert account into database success,[{}]", account);
     }
 
@@ -92,7 +90,7 @@ public class AccountServiceImpl implements AccountService {
     public void active(AccountVo accountVo) {
         Account account = accountMapper.getAccountByEmail(accountVo.getEmail());
         Preconditions.checkNotNull(account, "account in db is null.email:" + accountVo.getEmail());
-        String token = getToken(new String[]{account.getName(), account.getEmail(), account.getPassword(), account.getUpdateTime().toString()});
+        String token = EncryptUtil.getToken(new String[]{account.getName(), account.getEmail(), account.getPassword(), account.getUpdateTime().toString()});
         if (!token.equals(accountVo.getMyToken())) {
             logger.error("account active faile,activeCode has been changed.");
             //校验失败
@@ -144,20 +142,15 @@ public class AccountServiceImpl implements AccountService {
         record.setAccountId(account.getId());
         record.setAccountName(account.getName());
         record.setAccountEmail(account.getEmail());
-        record.setToken(getToken(new String[]{account.getName(), account.getEmail(), account.getPassword(), System.currentTimeMillis() + ""}));
+        record.setToken(EncryptUtil.getToken(new String[]{account.getName(), account.getEmail(), account.getPassword(), System.currentTimeMillis() + ""}));
         record.setCreateTime(createTime);
         //凭证有效期30分钟
         record.setExpiryTime(expiryTime);
         record.setIsExpiried(0);
         //保存到数据库
         accountFindpwdRecordMapper.insertOne(record);
-        //发送邮件
-        EmailTemplate template = new EmailTemplate();
-        template.setToAddress(account.getEmail());
-        template.setSubject("密码重置");
-        String url = "http://localhost/#/password/reset?myToken=" + record.getToken();
-        template.setContent(getRegesitEmailContent(url));
-        SendMailUtil.sendEmail(template);
+        //发布事件
+        applicationContext.publishEvent(new PwdFindEvent(record));
         logger.info("insert account_findpwd_record into database success,[{}]", findpwdRecordVo);
     }
 
@@ -242,7 +235,6 @@ public class AccountServiceImpl implements AccountService {
 //        }
     }
 
-
     private Account convertAccountVo(AccountVo vo) {
         Account account = new Account();
         account.setName(vo.getName());
@@ -250,84 +242,6 @@ public class AccountServiceImpl implements AccountService {
         //密码加密
         account.setPassword(EncryptUtil.getSoltMd5(vo.getPassword(), PRIVATE_KEY));
         return account;
-    }
-
-    //生成token
-    private String getToken(String... args) {
-        StringBuffer buffer = new StringBuffer();
-        for (String arg : args) {
-            buffer.append(EncryptUtil.getMd5(arg));
-        }
-        //去掉特殊字符，否则url在浏览器中打开有问题
-        return Base64.getUrlEncoder().encodeToString(buffer.toString().getBytes());
-    }
-
-    private String getRegesitEmailContent(String url) {
-        StringBuffer buffer = new StringBuffer(getStyleCss());
-        buffer.append("<body>")
-                .append("<div class='outdisplay'>")
-                .append("<div style='margin-bottom:50px;margin-top: 40px;'>" +
-                        "     <strong class='title'>You are on your way!</strong>" +
-                        "     <strong class='title'> 差一点就完成了！</strong>" +
-                        "     <strong class='title'>あと少しです！</strong>" +
-                        "</div>")
-                .append("<div style='margin-bottom: 30px;'>" +
-                        "     <p class='content'>Please click the link below to authenticate your email.</p>" +
-                        "     <p class='content'>请点击以下链接认证邮件。</p>" +
-                        "     <p class='content'>以下のリンクをクリックしてメールアドレスを認証します。</p>" +
-                        "</div>")
-                .append("<div style='margin-bottom: 20px;'>" +
-                        "     <a href=" + url + "><button class='confirmbutton'>Confirm/确认/認証</button></a>" +
-                        "</div>")
-                .append("<div class='linebottom'>" +
-                        "     <div style='float: right;'>" +
-                        "          <span style='color: rgb(143, 143, 143);'>2020</span>" +
-                        "          <a href='http://www.baidu.com'><span style='color: blue;'>ugogo</span></a>" +
-                        "     </div>" +
-                        "</div>")
-                .append("</div>")
-                .append("</body>");
-        return buffer.toString();
-    }
-
-    private String getStyleCss() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append("<style>")
-                .append(".outdisplay{" +
-                        "margin: 0 auto;" +
-                        "width: 100%;" +
-                        "max-width:600px;" +
-                        "color:#366eed}")
-                .append(".title{" +
-                        "margin: 1px auto;" +
-                        "font-size: 36px;" +
-                        "display: block;}")
-                .append(".linebottom{" +
-                        "padding:20px 0px 20px 0px;" +
-                        "line-height:20px;" +
-                        "border-top: 2px solid rgba(189, 188, 188, 0.3);}")
-                .append(".content{" +
-                        "font-size: 15px;" +
-                        "margin: 1px auto;}")
-                .append(".confirmbutton{" +
-                        "cursor: pointer;" +
-                        "background-color:#366EED;" +
-                        "border:1px solid #333333;" +
-                        "border-color:#366EED;" +
-                        "border-radius:4px;" +
-                        "border-width:0px;" +
-                        "color:#ffffff;" +
-                        "display:inline-block;" +
-                        "font-family:arial,helvetica,sans-serif;" +
-                        "font-size:20px;" +
-                        "font-weight:normal;" +
-                        "letter-spacing:0px;" +
-                        "line-height:40px;" +
-                        "padding:10px 20px 10px 20px;" +
-                        "text-align:center;" +
-                        "text-decoration:none}")
-                .append("</style>");
-        return buffer.toString();
     }
 }
 
