@@ -1,29 +1,24 @@
 package com.demo.controller;
 
-import com.alibaba.druid.support.json.JSONUtils;
-import com.alibaba.fastjson.JSON;
 import com.aliyuncs.exceptions.ClientException;
-import com.demo.DemoApplicationEntrance;
 import com.demo.constants.I18nKeys;
 import com.demo.service.AccountService;
 import com.demo.utils.I18nUtil;
 import com.demo.vo.AccountVo;
 import com.demo.vo.FindpwdRecordVo;
 import com.demo.vo.MessageVo;
-import com.fasterxml.jackson.databind.util.JSONPObject;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.*;
-import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 
 @RestController
 public class AccountController {
-    private static final Logger logger = LoggerFactory.getLogger(DemoApplicationEntrance.class);
+    private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
     private static final String LANGUAGE = "language";
 
     @Autowired
