@@ -9,6 +9,7 @@ import com.demo.model.ProductPrice;
 import com.demo.service.ProductService;
 import com.demo.vo.ProductCategoryVo;
 import com.demo.vo.ProductPriceVo;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,16 @@ public class ProductServiceImpl implements ProductService{
         //封装价格信息、折扣信息
         addExtraInfo(categoryTree,priceMultimap,discountMultimap);
         return categoryTree;
+    }
+
+    @Override
+    public ProductCategoryVo getProductByName(String name,String language) {
+        List<ProductCategoryVo> allProductInfo = getAllProductInfo(language);
+        ProductCategoryVo categoryVo = allProductInfo.stream()
+                .filter(vo -> vo.getName().equals(name))
+                .findFirst().orElse(null);
+        Preconditions.checkNotNull(categoryVo,"can't find root product category by name:"+name);
+        return categoryVo;
     }
 
     private List<ProductCategoryVo> getCategoryTree(String language){

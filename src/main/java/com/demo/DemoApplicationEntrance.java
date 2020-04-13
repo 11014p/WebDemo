@@ -8,8 +8,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Arrays;
-
-@Configuration
 //默认扫描启动类所在的包目录及子目录，可以通过scanBasePackages属性定制
 @SpringBootApplication
 @MapperScan("com.demo.dao.mapper")

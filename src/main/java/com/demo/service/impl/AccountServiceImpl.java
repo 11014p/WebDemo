@@ -2,6 +2,8 @@ package com.demo.service.impl;
 
 import com.aliyuncs.DefaultAcsClient;
 import com.aliyuncs.IAcsClient;
+import com.aliyuncs.afs.model.v20180112.AuthenticateSigRequest;
+import com.aliyuncs.afs.model.v20180112.AuthenticateSigResponse;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
@@ -29,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.mail.MessagingException;
 import java.security.GeneralSecurityException;
@@ -206,33 +209,33 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private void checkManMachine(ManMachineCheckVo vo) throws ClientException {
-//        logger.info("man machine check params[{}]",vo);
-//        if(vo==null || StringUtils.isEmpty(vo.getSessionId())
-//                || StringUtils.isEmpty(vo.getSig())
-//                || StringUtils.isEmpty(vo.getToken())
-//                || StringUtils.isEmpty(vo.getScene())){
-//            throw new ClientException("man machine check param is null.");
-//        }
-//        AuthenticateSigRequest request = new AuthenticateSigRequest();
-//        //会话ID。必填参数，从前端获取，不可更改。
-//        request.setSessionId(vo.getSessionId());
-//        // 签名串。必填参数，从前端获取，不可更改。
-//        request.setSig(vo.getSig());
-//        // 请求唯一标识。必填参数，从前端获取，不可更改。
-//        request.setToken(vo.getToken());
-//        // 场景标识。必填参数，从前端获取，不可更改。
-//        request.setScene(vo.getScene());
-//        // 应用类型标识。必填参数，后端填写。
-//        request.setAppKey(vo.getAppKey());
-//        // 客户端IP。必填参数，后端填写。
-//        request.setRemoteIp(vo.getRemoteIp());
-//
-//        AuthenticateSigResponse response = client.getAcsResponse(request);
-//        if (response.getCode() == 100) {
-//            logger.info("人机验签通过。");
-//        } else {
-//            throw new RuntimeException("人机验签失败！");
-//        }
+        logger.info("man machine check params[{}]",vo);
+        if(vo==null || StringUtils.isEmpty(vo.getSessionId())
+                || StringUtils.isEmpty(vo.getSig())
+                || StringUtils.isEmpty(vo.getToken())
+                || StringUtils.isEmpty(vo.getScene())){
+            throw new ClientException("man machine check param is null.");
+        }
+        AuthenticateSigRequest request = new AuthenticateSigRequest();
+        //会话ID。必填参数，从前端获取，不可更改。
+        request.setSessionId(vo.getSessionId());
+        // 签名串。必填参数，从前端获取，不可更改。
+        request.setSig(vo.getSig());
+        // 请求唯一标识。必填参数，从前端获取，不可更改。
+        request.setToken(vo.getToken());
+        // 场景标识。必填参数，从前端获取，不可更改。
+        request.setScene(vo.getScene());
+        // 应用类型标识。必填参数，后端填写。
+        request.setAppKey(vo.getAppKey());
+        // 客户端IP。必填参数，后端填写。
+        request.setRemoteIp(vo.getRemoteIp());
+
+        AuthenticateSigResponse response = client.getAcsResponse(request);
+        if (response.getCode() == 100) {
+            logger.info("人机验签通过。");
+        } else {
+            throw new RuntimeException("人机验签失败！");
+        }
     }
 
     private Account convertAccountVo(AccountVo vo) {
