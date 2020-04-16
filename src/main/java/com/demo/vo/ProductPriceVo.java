@@ -33,5 +33,7 @@ public class ProductPriceVo implements Serializable{
 
     private String descAgent;
 
+    private Double agentDiscount;
+
     private List<ProductDiscount> discount= Lists.newArrayList();
 }

@@ -3,20 +3,23 @@ package com.demo.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.servlet.http.HttpServletRequest;
 
 @Controller
 public class DefaultController {
-    @RequestMapping(value ="/aa",method = RequestMethod.GET)
+    @RequestMapping(value ="/",method = RequestMethod.GET)
     public String home() {
-        System.out.println("aaaaaaaaaaaaaa");
-        return "/index2.html";
-    }
-    @RequestMapping(value ="/static/bb",method = RequestMethod.GET)
-    public String home2() {
-        System.out.println("bbbbbbbb");
         return "/index.html";
     }
-
+    @RequestMapping(value ="/mytest/nginx",method = RequestMethod.GET)
+    @ResponseBody
+    public String nginxTest( HttpServletRequest request) {
+        String url = request.getRequestURL().toString();
+        System.out.println("url:"+url);
+        return url;
+    }
 
 }
 

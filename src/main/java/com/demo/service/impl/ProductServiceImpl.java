@@ -130,6 +130,8 @@ public class ProductServiceImpl implements ProductService{
                                 ).collect(Collectors.toList());
                         //添加折扣数据
                         discountList.addAll(sortedList);
+                        //添加最大折扣数据
+                        priceVo.setAgentDiscount(sortedList.get(sortedList.size()-1).getRate());
                     }
                 });
                 //TODO:价格信息排序
