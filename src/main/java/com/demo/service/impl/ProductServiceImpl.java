@@ -3,6 +3,8 @@ package com.demo.service.impl;
 import com.demo.dao.mapper.ProductCategoryMapper;
 import com.demo.dao.mapper.ProductDiscountMapper;
 import com.demo.dao.mapper.ProductPriceMapper;
+import com.demo.enums.AccountStatusEnum;
+import com.demo.model.Account;
 import com.demo.model.ProductCategory;
 import com.demo.model.ProductDiscount;
 import com.demo.model.ProductPrice;
@@ -15,22 +17,23 @@ import com.google.common.collect.Multimap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpSession;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import static com.demo.enums.AccountStatusEnum.AGENT;
 
 @Service
-public class ProductServiceImpl implements ProductService{
+public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductCategoryMapper productCategoryMapper;
     @Autowired
     private ProductPriceMapper productPriceMapper;
     @Autowired
     private ProductDiscountMapper productDiscountMapper;
-
+    @Autowired
+    private HttpSession session;
     @Override
     public List<ProductCategoryVo> getAllProductInfo(String language) {
         //获取目录树
@@ -40,29 +43,100 @@ public class ProductServiceImpl implements ProductService{
         //获取折扣信息
         Multimap<Integer, ProductDiscount> discountMultimap = getAllDiscountGroupPriceId();
         //封装价格信息、折扣信息
-        addExtraInfo(categoryTree,priceMultimap,discountMultimap);
+        addExtraInfo(categoryTree, priceMultimap, discountMultimap);
         return categoryTree;
     }
 
     @Override
-    public ProductCategoryVo getProductByName(String name,String language) {
+    public ProductCategoryVo getProductByName(String name, String language) {
         List<ProductCategoryVo> allProductInfo = getAllProductInfo(language);
         ProductCategoryVo categoryVo = allProductInfo.stream()
                 .filter(vo -> vo.getName().equals(name))
                 .findFirst().orElse(null);
-        Preconditions.checkNotNull(categoryVo,"can't find root product category by name:"+name);
+        Preconditions.checkNotNull(categoryVo, "can't find root product category by name:" + name);
         return categoryVo;
     }
 
-    private List<ProductCategoryVo> getCategoryTree(String language){
+    @Override
+    public ProductCategoryVo getProductSalePrice(int categoryId, int priceId, int buyCount,  String language) {
+        List<ProductCategoryVo> allProductInfo = getAllProductInfo(language);
+        ProductCategoryVo categoryVo = getChildRecursion(allProductInfo, categoryId, priceId);
+        Preconditions.checkNotNull(categoryVo, "can't find product category by categoryId:" + categoryId);
+        //计算售价
+        salePriceCalculate(categoryVo.getProduct().get(0),buyCount);
+        return categoryVo;
+    }
+
+    private ProductCategoryVo getChildRecursion(List<ProductCategoryVo> productCategoryVoList, int categoryId, int priceId) {
+        for (ProductCategoryVo vo : productCategoryVoList) {
+            if (vo.getCategoryId() == categoryId) {
+                List<ProductPriceVo> priceVoList = vo.getProduct();
+                List<ProductPriceVo> collect = priceVoList.stream()
+                        .filter(priceVo -> priceVo.getPriceId() == priceId)
+                        .collect(Collectors.toList());
+                //覆盖原有集合
+                vo.setProduct(collect);
+                return vo;
+            } else {
+                if (!vo.getChildren().isEmpty()) {
+                    //递归查询子节点
+                    return getChildRecursion(vo.getChildren(), categoryId, priceId);
+                }
+            }
+        }
+        return null;
+    }
+
+    private void salePriceCalculate(ProductPriceVo vo, int count) {
+        Account account = (Account) session.getAttribute("account");
+        AccountStatusEnum status=null;
+        if(account==null){
+           status = AccountStatusEnum.NO_LOGIN;
+        }else{
+            status=account.getStatus();
+        }
+        //获取用户等级
+        switch (status) {
+            case AGENT:
+                Double salePrice = count * vo.getAgentDiscount() * vo.getCpm() / 1000;
+                vo.setSalePrice(salePrice);
+                break;
+            case LOGIN:
+                //TODO:
+                break;
+            case NO_LOGIN:
+            default:
+                double discountRate = getDiscountRate(vo, count);
+                salePrice=count*discountRate*vo.getCpm()/ 1000;
+                vo.setSalePrice(salePrice);
+                break;
+        }
+
+    }
+
+    private double getDiscountRate(ProductPriceVo vo,int count){
+        for(ProductDiscount discount:vo.getDiscount()){
+            if(count>=discount.getMinNum()&& count<=discount.getMaxNum()){
+                return discount.getRate();
+            }
+        }
+        throw new RuntimeException("can't find match price discount rate,count:"+count);
+    }
+
+    private List<ProductCategoryVo> getCategoryTree(String language) {
         List<ProductCategory> categoryList = productCategoryMapper.getAllProductCategory(language);
-        Multimap<Integer,ProductCategory> categoryMultimap= HashMultimap.create();
-        categoryList.forEach(category -> categoryMultimap.put(category.getParentId(),category));
+        Multimap<Integer, ProductCategory> categoryMultimap = HashMultimap.create();
+        categoryList.forEach(category -> categoryMultimap.put(category.getParentId(), category));
         Collection<ProductCategory> rootCategories = categoryMultimap.get(null);
+        Account account= (Account) session.getAttribute("account");
         List<ProductCategoryVo> collect = rootCategories.stream().map(rootCategory -> {
             ProductCategoryVo rootCategoryVo = convertCategory(rootCategory);
+            //添加用户状态
+            if(account!=null) {
+                rootCategoryVo.setStatus(account.getStatus());
+            }
             //构建目录树
-            buildCategoryTree(categoryMultimap.get(rootCategory.getId()), rootCategoryVo, categoryMultimap);
+            buildCategoryTree(categoryMultimap.get(rootCategory.getCategoryId()), rootCategoryVo, categoryMultimap);
             return rootCategoryVo;
         }).collect(Collectors.toList());
         return collect;
@@ -71,39 +145,38 @@ public class ProductServiceImpl implements ProductService{
 
     private void buildCategoryTree(Collection<ProductCategory> childCategories,
                                    ProductCategoryVo parentCategoryVo,
-                                   Multimap<Integer,ProductCategory> categoryMultimap){
-        for(ProductCategory childCategory:childCategories){
+                                   Multimap<Integer, ProductCategory> categoryMultimap) {
+        for (ProductCategory childCategory : childCategories) {
             ProductCategoryVo childCategoryVo = convertCategory(childCategory);
             parentCategoryVo.getChildren().add(childCategoryVo);
-            Integer id = childCategory.getId();
-            if(categoryMultimap.containsKey(id)){
-                buildCategoryTree(categoryMultimap.get(id),childCategoryVo,categoryMultimap);
+            Integer categoryId = childCategory.getCategoryId();
+            if (categoryMultimap.containsKey(categoryId)) {
+                buildCategoryTree(categoryMultimap.get(categoryId), childCategoryVo, categoryMultimap);
             }
         }
     }
 
-    private Multimap<Integer,ProductPrice> getAllPriceGroupCategoryId(String language){
+    private Multimap<Integer, ProductPrice> getAllPriceGroupCategoryId(String language) {
         List<ProductPrice> priceList = productPriceMapper.getAllProductPrice(language);
-        Multimap<Integer,ProductPrice> priceMultimap= HashMultimap.create();
-        priceList.forEach(price -> priceMultimap.put(price.getCategoryId(),price));
+        Multimap<Integer, ProductPrice> priceMultimap = HashMultimap.create();
+        priceList.forEach(price -> priceMultimap.put(price.getCategoryId(), price));
         return priceMultimap;
     }
 
-    private Multimap<Integer,ProductDiscount> getAllDiscountGroupPriceId(){
+    private Multimap<Integer, ProductDiscount> getAllDiscountGroupPriceId() {
         List<ProductDiscount> discountList = productDiscountMapper.getAllProductDiscount();
-        Multimap<Integer,ProductDiscount> discountMultimap= HashMultimap.create();
-        discountList.forEach(discount -> discountMultimap.put(discount.getPriceId(),discount));
+        Multimap<Integer, ProductDiscount> discountMultimap = HashMultimap.create();
+        discountList.forEach(discount -> discountMultimap.put(discount.getPriceId(), discount));
         return discountMultimap;
     }
 
-    private ProductCategoryVo convertCategory(ProductCategory category){
-        ProductCategoryVo categoryVo=new ProductCategoryVo();
-        categoryVo.setId(category.getId());
+    private ProductCategoryVo convertCategory(ProductCategory category) {
+        ProductCategoryVo categoryVo = new ProductCategoryVo();
+        categoryVo.setCategoryId(category.getCategoryId());
         categoryVo.setParentId(category.getParentId());
         categoryVo.setName(category.getName());
         categoryVo.setDescription(category.getDescription());
         categoryVo.setLanguage(category.getLanguage());
-        categoryVo.setStatus(category.getStatus());
         return categoryVo;
     }
 
@@ -111,17 +184,17 @@ public class ProductServiceImpl implements ProductService{
     private void addExtraInfo(List<ProductCategoryVo> categoryTree,
                               Multimap<Integer, ProductPrice> priceMultimap,
                               Multimap<Integer, ProductDiscount> discountMultimap
-                              ){
-        for(ProductCategoryVo categoryVo:categoryTree){
-            Integer categoryVoId = categoryVo.getId();
-            if(priceMultimap.containsKey(categoryVoId)){
+    ) {
+        for (ProductCategoryVo categoryVo : categoryTree) {
+            Integer categoryVoId = categoryVo.getCategoryId();
+            if (priceMultimap.containsKey(categoryVoId)) {
                 List<ProductPriceVo> priceVoList = categoryVo.getProduct();
-                priceMultimap.get(categoryVoId).forEach(price ->{
+                priceMultimap.get(categoryVoId).forEach(price -> {
                     ProductPriceVo priceVo = convertProductPrice(price);
                     //添加价格数据
                     priceVoList.add(priceVo);
-                    Integer priceVoId = priceVo.getId();
-                    if(discountMultimap.containsKey(priceVoId)){
+                    Integer priceVoId = priceVo.getPriceId();
+                    if (discountMultimap.containsKey(priceVoId)) {
                         List<ProductDiscount> discountList = priceVo.getDiscount();
                         //按照minNum升序排序
                         List<ProductDiscount> sortedList = discountMultimap.get(priceVoId).stream()
@@ -131,20 +204,20 @@ public class ProductServiceImpl implements ProductService{
                         //添加折扣数据
                         discountList.addAll(sortedList);
                         //添加最大折扣数据
-                        priceVo.setAgentDiscount(sortedList.get(sortedList.size()-1).getRate());
+                        priceVo.setAgentDiscount(sortedList.get(sortedList.size() - 1).getRate());
                     }
                 });
                 //TODO:价格信息排序
             }
-            if(!categoryVo.getChildren().isEmpty()){
-                addExtraInfo(categoryVo.getChildren(),priceMultimap,discountMultimap);
+            if (!categoryVo.getChildren().isEmpty()) {
+                addExtraInfo(categoryVo.getChildren(), priceMultimap, discountMultimap);
             }
         }
     }
 
-    private ProductPriceVo convertProductPrice(ProductPrice productPrice){
-        ProductPriceVo priceVo=new ProductPriceVo();
-        priceVo.setId(productPrice.getId());
+    private ProductPriceVo convertProductPrice(ProductPrice productPrice) {
+        ProductPriceVo priceVo = new ProductPriceVo();
+        priceVo.setPriceId(productPrice.getPriceId());
         priceVo.setName(productPrice.getName());
         priceVo.setCpm(productPrice.getCpm());
         priceVo.setCurrency(productPrice.getCurrency());

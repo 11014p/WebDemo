@@ -9,7 +9,7 @@ import java.util.List;
 
 @Data
 public class ProductPriceVo implements Serializable{
-    private Integer id;
+    private Integer priceId;
 
     private String name;
 
@@ -34,6 +34,8 @@ public class ProductPriceVo implements Serializable{
     private String descAgent;
 
     private Double agentDiscount;
+
+    private double salePrice;
 
     private List<ProductDiscount> discount= Lists.newArrayList();
 }

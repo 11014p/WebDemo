@@ -6,15 +6,13 @@ import java.io.Serializable;
 import java.util.Date;
 @Data
 public class ProductCategory implements Serializable{
-    private Integer id;
+    private Integer categoryId;
 
     private Integer parentId;
 
     private String name;
 
     private String description;
-
-    private String status;
 
     private String language;
 

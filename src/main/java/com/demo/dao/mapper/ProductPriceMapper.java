@@ -14,14 +14,14 @@ public interface ProductPriceMapper {
     //查询所有价格信息
     List<ProductPrice> getAllProductPrice(String language);
 
-    @Select("SELECT * FROM product_price WHERE id = #{id}")
+    @Select("SELECT * FROM product_price WHERE price_id = #{id}")
     ProductPrice getProductPriceById(Integer id);
 
     @Insert("<script>" +
             "insert into product_price" +
             "    <trim prefix='(' suffix=')' suffixOverrides=','>" +
-            "      <if test='id != null'>" +
-            "        id," +
+            "      <if test='priceId != null'>" +
+            "        price_id," +
             "      </if>" +
             "      <if test='categoryId != null'>" +
             "        category_id," +
@@ -70,8 +70,8 @@ public interface ProductPriceMapper {
             "      </if>" +
             "    </trim>" +
             "    <trim prefix='values (' suffix=')' suffixOverrides=','>" +
-            "      <if test='id != null'>" +
-            "        #{id,jdbcType=INTEGER}," +
+            "      <if test='priceId != null'>" +
+            "        #{priceId,jdbcType=INTEGER}," +
             "      </if>" +
             "      <if test='categoryId != null'>" +
             "        #{categoryId,jdbcType=INTEGER}," +
@@ -120,7 +120,7 @@ public interface ProductPriceMapper {
             "      </if>" +
             "    </trim>" +
             "</script>")
-    @Options(useGeneratedKeys=true,keyProperty="id",keyColumn="id")
+    @Options(useGeneratedKeys=true,keyProperty="priceId",keyColumn="price_id")
     void insertProductPrice(ProductPrice productPrice);
 
     @Update("<script> " +
@@ -172,7 +172,7 @@ public interface ProductPriceMapper {
             "        is_del = #{isDel,jdbcType=VARCHAR}," +
             "      </if>" +
             "    </set>" +
-            "    where id = #{id,jdbcType=INTEGER}"+
+            "    where price_id = #{priceId,jdbcType=INTEGER}"+
             "</script> ")
     void updateProductPrice(ProductPrice productPrice);
 }

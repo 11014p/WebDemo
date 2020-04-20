@@ -1,8 +1,9 @@
 package com.demo.controller;
 
+import com.demo.enums.AccountStatusEnum;
+import com.demo.model.Account;
 import com.demo.service.ProductService;
 import com.demo.vo.ProductCategoryVo;
-import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,20 +23,25 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+    @Autowired
+    private HttpServletRequest request;
 
     @GetMapping(path = "/product/category")
-    public List<ProductCategoryVo> getProductCategory(HttpServletRequest request) {
+    public List<ProductCategoryVo> getProductCategory() {
         String language = request.getHeader(LANGUAGE);
         logger.info("headerLanguage:{}", language);
         if(StringUtils.isEmpty(language)){
             language=LANGUAGE_DEFAULT;
         }
+        Account account=new Account();
+        account.setStatus(AccountStatusEnum.AGENT);
+        request.getSession().setAttribute("account",account);
         List<ProductCategoryVo> categoryVoList = productService.getAllProductInfo(language);
         return categoryVoList;
     }
 
     @GetMapping(path = "/product/category/single")
-    public ProductCategoryVo getProductCategoryByName(@RequestParam("name") String name, HttpServletRequest request) {
+    public ProductCategoryVo getProductCategoryByName(@RequestParam("name") String name) {
         String language = request.getHeader(LANGUAGE);
         logger.info("headerLanguage:{}", language);
         if(StringUtils.isEmpty(language)){
@@ -43,6 +49,19 @@ public class ProductController {
         }
         ProductCategoryVo categoryVo = productService.getProductByName(name, language);
         return categoryVo;
+    }
+
+    @GetMapping(path = "/product/saleprice")
+    public ProductCategoryVo getProductSalePrice(@RequestParam("categoryId") int categoryId,
+                                                 @RequestParam("priceId") int priceId,
+                                                 @RequestParam("count") int count) {
+        String language = request.getHeader(LANGUAGE);
+        logger.info("headerLanguage:{}", language);
+        if(StringUtils.isEmpty(language)){
+            language=LANGUAGE_DEFAULT;
+        }
+        ProductCategoryVo productSalePrice = productService.getProductSalePrice(categoryId,priceId, count,language);
+        return productSalePrice;
     }
 
 }

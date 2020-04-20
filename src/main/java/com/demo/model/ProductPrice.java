@@ -7,7 +7,7 @@ import java.util.Date;
 
 @Data
 public class ProductPrice implements Serializable {
-    private Integer id;
+    private Integer priceId;
 
     private Integer categoryId;
 

@@ -14,14 +14,14 @@ public interface ProductCategoryMapper {
     //查询所有产品
     List<ProductCategory> getAllProductCategory(String language);
 
-    @Select("SELECT * FROM product_category WHERE id = #{id}")
+    @Select("SELECT * FROM product_category WHERE category_id = #{id}")
     ProductCategory getProductCategoryById(Integer id);
 
     @Insert("<script>" +
             "insert into product_category" +
             "    <trim prefix='(' suffix=')' suffixOverrides=','>" +
-            "      <if test='id != null'>" +
-            "        id," +
+            "      <if test='categoryId != null'>" +
+            "        category_id," +
             "      </if>" +
             "      <if test='parentId != null'>" +
             "        parent_id," +
@@ -31,9 +31,6 @@ public interface ProductCategoryMapper {
             "      </if>" +
             "      <if test='description != null'>" +
             "        description," +
-            "      </if>" +
-            "      <if test='status != null'>" +
-            "        status," +
             "      </if>" +
             "      <if test='language != null'>" +
             "        language," +
@@ -49,8 +46,8 @@ public interface ProductCategoryMapper {
             "      </if>" +
             "    </trim>" +
             "    <trim prefix='values (' suffix=')' suffixOverrides=','>" +
-            "      <if test='id != null'>" +
-            "        #{id,jdbcType=INTEGER}," +
+            "      <if test='categoryId != null'>" +
+            "        #{categoryId,jdbcType=INTEGER}," +
             "      </if>" +
             "      <if test='parentId != null'>" +
             "        #{parentId,jdbcType=INTEGER}," +
@@ -60,9 +57,6 @@ public interface ProductCategoryMapper {
             "      </if>" +
             "      <if test='description != null'>" +
             "        #{description,jdbcType=VARCHAR}," +
-            "      </if>" +
-            "      <if test='status != null'>" +
-            "        #{status,jdbcType=VARCHAR}," +
             "      </if>" +
             "      <if test='language != null'>" +
             "        #{language,jdbcType=VARCHAR}," +
@@ -78,7 +72,7 @@ public interface ProductCategoryMapper {
             "      </if>" +
             "    </trim>" +
             "</script>")
-    @Options(useGeneratedKeys=true,keyProperty="id",keyColumn="id")
+    @Options(useGeneratedKeys=true,keyProperty="categoryId",keyColumn="category_id")
     void insertProductCategory(ProductCategory productCategory);
 
     @Update("<script> " +
@@ -93,9 +87,6 @@ public interface ProductCategoryMapper {
             "      <if test='description != null'>" +
             "        description = #{description,jdbcType=VARCHAR}," +
             "      </if>" +
-            "      <if test='status != null'>" +
-            "        status = #{status,jdbcType=VARCHAR}," +
-            "      </if>" +
             "      <if test='language != null'>" +
             "        language = #{language,jdbcType=VARCHAR}," +
             "      </if>" +
@@ -109,7 +100,7 @@ public interface ProductCategoryMapper {
             "        is_del = #{isDel,jdbcType=VARCHAR}," +
             "      </if>" +
             "    </set>" +
-            "    where id = #{id,jdbcType=INTEGER}"+
+            "    where category_id = #{categoryId,jdbcType=INTEGER}"+
             "</script> ")
     void updateProductCategory(ProductCategory productCategory);
 }

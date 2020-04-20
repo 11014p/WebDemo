@@ -14,14 +14,14 @@ public interface ProductDiscountMapper {
     //查询所有折扣数据
     List<ProductDiscount> getAllProductDiscount();
 
-    @Select("SELECT * FROM product_discount WHERE id = #{id}")
+    @Select("SELECT * FROM product_discount WHERE discount_id = #{id}")
     ProductDiscount getProductDiscountById(Integer id);
 
     @Insert("<script>" +
             "insert into product_discount" +
             "    <trim prefix='(' suffix=')' suffixOverrides=','>" +
-            "      <if test='id != null'>" +
-            "        id," +
+            "      <if test='discountId != null'>" +
+            "        discount_id," +
             "      </if>" +
             "      <if test='priceId != null'>" +
             "        price_id," +
@@ -40,8 +40,8 @@ public interface ProductDiscountMapper {
             "      </if>" +
             "    </trim>" +
             "    <trim prefix='values (' suffix=')' suffixOverrides=','>" +
-            "      <if test='id != null'>" +
-            "        #{id,jdbcType=INTEGER}," +
+            "      <if test='discountId != null'>" +
+            "        #{discountId,jdbcType=INTEGER}," +
             "      </if>" +
             "      <if test='priceId != null'>" +
             "        #{priceId,jdbcType=INTEGER}," +
@@ -60,7 +60,7 @@ public interface ProductDiscountMapper {
             "      </if>" +
             "    </trim>" +
             "</script>")
-    @Options(useGeneratedKeys=true,keyProperty="id",keyColumn="id")
+    @Options(useGeneratedKeys=true,keyProperty="discountId",keyColumn="discount_id")
     void insertProductDiscount(ProductDiscount productDiscount);
 
     @Update("<script> " +
@@ -82,7 +82,7 @@ public interface ProductDiscountMapper {
             "        is_del = #{isDel,jdbcType=VARCHAR}," +
             "      </if>" +
             "    </set>" +
-            "    where id = #{id,jdbcType=INTEGER}"+
+            "    where discount_id = #{discountId,jdbcType=INTEGER}"+
             "</script> ")
     void updateProductDiscount(ProductDiscount productDiscount);
 }

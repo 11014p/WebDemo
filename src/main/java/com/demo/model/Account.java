@@ -1,5 +1,6 @@
 package com.demo.model;
 
+import com.demo.enums.AccountStatusEnum;
 import com.demo.enums.ActiveEnum;
 import com.demo.enums.DelEnum;
 import lombok.Data;
@@ -25,4 +26,6 @@ public class Account implements Serializable{
     private Date updateTime;
     //账户激活标记
     private ActiveEnum isActive;
+    //用户种类
+    private AccountStatusEnum status= AccountStatusEnum.NO_LOGIN;
 }

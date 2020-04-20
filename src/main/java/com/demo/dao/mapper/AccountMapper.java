@@ -29,6 +29,9 @@ public interface AccountMapper {
             "      <if test='name != null'>" +
             "        NAME," +
             "      </if>" +
+            "      <if test='status != null'>" +
+            "        STATUS," +
+            "      </if>" +
             "      <if test='email != null'>" +
             "        EMAIL," +
             "      </if>" +
@@ -51,6 +54,9 @@ public interface AccountMapper {
             "    <trim prefix='values (' suffix=')' suffixOverrides=','>" +
             "      <if test='name != null'>" +
             "        #{name,jdbcType=VARCHAR}," +
+            "      </if>" +
+            "      <if test='status != null'>" +
+            "        #{status,jdbcType=VARCHAR}," +
             "      </if>" +
             "      <if test='email != null'>" +
             "        #{email,jdbcType=VARCHAR}," +
@@ -80,6 +86,9 @@ public interface AccountMapper {
             "    <set>" +
             "      <if test='name != null'>" +
             "        NAME = #{name,jdbcType=VARCHAR}," +
+            "      </if>" +
+            "      <if test='status != null'>" +
+            "        STATUS = #{status,jdbcType=VARCHAR}," +
             "      </if>" +
             "      <if test='email != null'>" +
             "        EMAIL = #{email,jdbcType=VARCHAR}," +

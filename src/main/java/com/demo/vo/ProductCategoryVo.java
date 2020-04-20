@@ -1,5 +1,6 @@
 package com.demo.vo;
 
+import com.demo.enums.AccountStatusEnum;
 import com.google.common.collect.Lists;
 import lombok.Data;
 
@@ -7,7 +8,7 @@ import java.io.Serializable;
 import java.util.List;
 @Data
 public class ProductCategoryVo implements Serializable {
-    private Integer id;
+    private Integer categoryId;
 
     private Integer parentId;
 
@@ -15,7 +16,7 @@ public class ProductCategoryVo implements Serializable {
 
     private String description;
 
-    private String status;
+    private AccountStatusEnum status;
 
     private String language;
 

@@ -17,7 +17,7 @@ public class DefaultController {
     @ResponseBody
     public String nginxTest( HttpServletRequest request) {
         String url = request.getRequestURL().toString();
-        System.out.println("url:"+url);
+        System.out.println("服务器二接收到的url:"+url);
         return url;
     }
 
