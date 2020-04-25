@@ -17,6 +17,8 @@ public class ProductPriceVo implements Serializable{
 
     private String language;
 
+    private Integer sellerProductId;
+
     private Double cpm;
 
     private String currency;

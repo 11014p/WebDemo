@@ -23,9 +23,6 @@ public interface ProductPriceMapper {
             "      <if test='priceId != null'>" +
             "        price_id," +
             "      </if>" +
-            "      <if test='categoryId != null'>" +
-            "        category_id," +
-            "      </if>" +
             "      <if test='name != null'>" +
             "        name," +
             "      </if>" +
@@ -34,6 +31,15 @@ public interface ProductPriceMapper {
             "      </if>" +
             "      <if test='language != null'>" +
             "        language," +
+            "      </if>" +
+            "      <if test='sellerName != null'>" +
+            "        seller_name," +
+            "      </if>" +
+            "      <if test='sellerProductId != null'>" +
+            "        seller_product_id," +
+            "      </if>" +
+            "      <if test='sellerCpm != null'>" +
+            "        seller_cpm," +
             "      </if>" +
             "      <if test='cpm != null'>" +
             "        cpm," +
@@ -73,9 +79,6 @@ public interface ProductPriceMapper {
             "      <if test='priceId != null'>" +
             "        #{priceId,jdbcType=INTEGER}," +
             "      </if>" +
-            "      <if test='categoryId != null'>" +
-            "        #{categoryId,jdbcType=INTEGER}," +
-            "      </if>" +
             "      <if test='name != null'>" +
             "        #{name,jdbcType=VARCHAR}," +
             "      </if>" +
@@ -84,6 +87,15 @@ public interface ProductPriceMapper {
             "      </if>" +
             "      <if test='language != null'>" +
             "        #{language,jdbcType=VARCHAR}," +
+            "      </if>" +
+            "      <if test='sellerName != null'>" +
+            "        #{sellerName,jdbcType=VARCHAR}," +
+            "      </if>" +
+            "      <if test='sellerProductId != null'>" +
+            "        #{sellerProductId,jdbcType=INTEGER}," +
+            "      </if>" +
+            "      <if test='sellerCpm != null'>" +
+            "        #{sellerCpm,jdbcType=DOUBLE}," +
             "      </if>" +
             "      <if test='cpm != null'>" +
             "        #{cpm,jdbcType=DOUBLE}," +
@@ -126,9 +138,6 @@ public interface ProductPriceMapper {
     @Update("<script> " +
             "update product_price" +
             "    <set>" +
-            "      <if test='categoryId != null'>" +
-            "        category_id = #{categoryId,jdbcType=INTEGER}," +
-            "      </if>" +
             "      <if test='name != null'>" +
             "        name = #{name,jdbcType=VARCHAR}," +
             "      </if>" +
@@ -137,6 +146,15 @@ public interface ProductPriceMapper {
             "      </if>" +
             "      <if test='language != null'>" +
             "        language = #{language,jdbcType=VARCHAR}," +
+            "      </if>" +
+            "      <if test='sellerName != null'>" +
+            "        seller_name = #{sellerName,jdbcType=VARCHAR}," +
+            "      </if>" +
+            "      <if test='sellerProductId != null'>" +
+            "        seller_product_id = #{sellerProductId,jdbcType=INTEGER}," +
+            "      </if>" +
+            "      <if test='sellerCpm != null'>" +
+            "        seller_cpm = #{sellerCpm,jdbcType=DOUBLE}," +
             "      </if>" +
             "      <if test='cpm != null'>" +
             "        cpm = #{cpm,jdbcType=DOUBLE}," +

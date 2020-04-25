@@ -23,9 +23,6 @@ public interface ProductDiscountMapper {
             "      <if test='discountId != null'>" +
             "        discount_id," +
             "      </if>" +
-            "      <if test='priceId != null'>" +
-            "        price_id," +
-            "      </if>" +
             "      <if test='minNum != null'>" +
             "        min_num," +
             "      </if>" +
@@ -42,9 +39,6 @@ public interface ProductDiscountMapper {
             "    <trim prefix='values (' suffix=')' suffixOverrides=','>" +
             "      <if test='discountId != null'>" +
             "        #{discountId,jdbcType=INTEGER}," +
-            "      </if>" +
-            "      <if test='priceId != null'>" +
-            "        #{priceId,jdbcType=INTEGER}," +
             "      </if>" +
             "      <if test='minNum != null'>" +
             "        #{minNum,jdbcType=INTEGER}," +
@@ -66,9 +60,6 @@ public interface ProductDiscountMapper {
     @Update("<script> " +
             "update product_discount" +
             "    <set>" +
-            "      <if test='priceId != null'>" +
-            "        price_id = #{priceId,jdbcType=INTEGER}," +
-            "      </if>" +
             "      <if test='minNum != null'>" +
             "        min_num = #{minNum,jdbcType=INTEGER}," +
             "      </if>" +

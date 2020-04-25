@@ -33,9 +33,9 @@ public class ProductController {
         if(StringUtils.isEmpty(language)){
             language=LANGUAGE_DEFAULT;
         }
-        Account account=new Account();
-        account.setStatus(AccountStatusEnum.AGENT);
-        request.getSession().setAttribute("account",account);
+//        Account account=new Account();
+//        account.setStatus(AccountStatusEnum.AGENT);
+//        request.getSession().setAttribute("account",account);
         List<ProductCategoryVo> categoryVoList = productService.getAllProductInfo(language);
         return categoryVoList;
     }

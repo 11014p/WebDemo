@@ -1,13 +1,8 @@
 package com.demo.service.impl;
 
-import com.demo.dao.mapper.ProductCategoryMapper;
-import com.demo.dao.mapper.ProductDiscountMapper;
-import com.demo.dao.mapper.ProductPriceMapper;
+import com.demo.dao.mapper.*;
 import com.demo.enums.AccountStatusEnum;
-import com.demo.model.Account;
-import com.demo.model.ProductCategory;
-import com.demo.model.ProductDiscount;
-import com.demo.model.ProductPrice;
+import com.demo.model.*;
 import com.demo.service.ProductService;
 import com.demo.vo.ProductCategoryVo;
 import com.demo.vo.ProductPriceVo;
@@ -19,7 +14,9 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.demo.enums.AccountStatusEnum.AGENT;
@@ -29,7 +26,11 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductCategoryMapper productCategoryMapper;
     @Autowired
+    private CategoryPriceMappingMapper categoryPriceMappingMapper;
+    @Autowired
     private ProductPriceMapper productPriceMapper;
+    @Autowired
+    private PriceDiscountMappingMapper priceDiscountMappingMapper;
     @Autowired
     private ProductDiscountMapper productDiscountMapper;
     @Autowired
@@ -157,16 +158,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private Multimap<Integer, ProductPrice> getAllPriceGroupCategoryId(String language) {
+        List<CategoryPriceMapping> categoryPriceMappings = categoryPriceMappingMapper.getAllCategoryPriceMapping();
         List<ProductPrice> priceList = productPriceMapper.getAllProductPrice(language);
-        Multimap<Integer, ProductPrice> priceMultimap = HashMultimap.create();
-        priceList.forEach(price -> priceMultimap.put(price.getCategoryId(), price));
+        Map<Integer,ProductPrice> priceMap=new HashMap<>();
+        priceList.forEach(price -> priceMap.put(price.getPriceId(),price));
+         Multimap<Integer, ProductPrice> priceMultimap = HashMultimap.create();
+        categoryPriceMappings.forEach(mapping -> priceMultimap.put(mapping.getCategoryId(), priceMap.get(mapping.getPriceId())));
         return priceMultimap;
     }
 
     private Multimap<Integer, ProductDiscount> getAllDiscountGroupPriceId() {
+        List<PriceDiscountMapping> priceDiscountMappings = priceDiscountMappingMapper.getAllPriceDiscountMapping();
         List<ProductDiscount> discountList = productDiscountMapper.getAllProductDiscount();
+        Map<Integer,ProductDiscount> discountMap=new HashMap<>();
+        discountList.forEach(discount ->discountMap.put(discount.getDiscountId(),discount));
         Multimap<Integer, ProductDiscount> discountMultimap = HashMultimap.create();
-        discountList.forEach(discount -> discountMultimap.put(discount.getPriceId(), discount));
+        priceDiscountMappings.forEach(mapping -> discountMultimap.put(mapping.getPriceId(), discountMap.get(mapping.getDiscountId())));
         return discountMultimap;
     }
 
@@ -219,6 +226,7 @@ public class ProductServiceImpl implements ProductService {
         ProductPriceVo priceVo = new ProductPriceVo();
         priceVo.setPriceId(productPrice.getPriceId());
         priceVo.setName(productPrice.getName());
+        priceVo.setSellerProductId(productPrice.getSellerProductId());
         priceVo.setCpm(productPrice.getCpm());
         priceVo.setCurrency(productPrice.getCurrency());
         priceVo.setDescAgent(productPrice.getDescAgent());

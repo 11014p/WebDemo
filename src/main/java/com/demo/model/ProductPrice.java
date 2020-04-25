@@ -9,13 +9,17 @@ import java.util.Date;
 public class ProductPrice implements Serializable {
     private Integer priceId;
 
-    private Integer categoryId;
-
     private String name;
 
     private String displayName;
 
     private String language;
+
+    private String sellerName;
+
+    private Integer sellerProductId;
+
+    private Double sellerCpm;
 
     private Double cpm;
 

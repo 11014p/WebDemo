@@ -9,6 +9,9 @@ import javax.servlet.http.HttpServletRequest;
 
 @Controller
 public class DefaultController {
+    public DefaultController(){
+        System.out.println("ssssss");
+    }
     @RequestMapping(value ="/",method = RequestMethod.GET)
     public String home() {
         return "/index.html";

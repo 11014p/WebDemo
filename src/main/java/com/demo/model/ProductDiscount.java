@@ -7,8 +7,6 @@ import java.io.Serializable;
 public class ProductDiscount  implements Serializable {
     private Integer discountId;
 
-    private Integer priceId;
-
     private Integer minNum;
 
     private Integer maxNum;
