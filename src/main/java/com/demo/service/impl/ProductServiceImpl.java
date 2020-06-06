@@ -95,16 +95,17 @@ public class ProductServiceImpl implements ProductService {
     private void salePriceCalculate(ProductPriceVo vo, int categoryId, int count) {
         Account account = (Account) session.getAttribute("account");
         AccountStatusEnum status = null;
-        boolean isPromoUsed = false;
+        boolean isFirstBuy = false;
         if (account == null) {
             status = AccountStatusEnum.NO_LOGIN;
         } else {
             status = account.getStatus();
             Integer accountId = account.getId();
             List<OrderInfo> orderInfos = orderService.getOrderInfo(accountId, categoryId);
-            //当前产品分类下已有购买记录，不再享受首次优惠
-            if (!orderInfos.isEmpty()) {
-                isPromoUsed = true;
+            //当前产品分类下没有购买记录，享受首次优惠
+            if (orderInfos.isEmpty()) {
+                isFirstBuy = true;
+                vo.setFirstBuy(true);
             }
         }
         //获取用户等级
@@ -116,14 +117,14 @@ public class ProductServiceImpl implements ProductService {
             case LOGIN:
                 ProductDiscount discount = getDiscountRate(vo, count);
                 double discountRate = discount.getRate();
-                //首次优惠已使用,使用普通折扣计算售价
-                if (isPromoUsed) {
-                    salePrice = count * discountRate * vo.getCpm() / 1000;
-                } else {
-                    //首次优惠未使用,优先使用促销折扣计算售价
+                //首次购买,优先使用促销折扣计算售价（只限第一档，其它档位使用普通折扣）
+                if (isFirstBuy) {
                     Double promoRate = discount.getPromoRate();
                     double finalRate = promoRate != null ? promoRate : discountRate;
                     salePrice = count * finalRate * vo.getCpm() / 1000;
+                } else {
+                    //使用普通折扣计算售价
+                    salePrice = count * discountRate * vo.getCpm() / 1000;
                 }
                 vo.setSalePrice(salePrice);
                 break;

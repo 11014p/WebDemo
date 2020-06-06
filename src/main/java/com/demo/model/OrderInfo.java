@@ -19,6 +19,8 @@ public class OrderInfo implements Serializable{
     private Integer buyNum;
     //售价
     private Double salePrice;
+    //目标链接
+    private String url;
     //已完成数量
     private Integer completeNum;
     //创建时间

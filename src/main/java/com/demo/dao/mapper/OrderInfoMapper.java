@@ -15,6 +15,10 @@ public interface OrderInfoMapper {
         //查询单个用户下订单
     List<OrderInfo> getOrderInfoByAccountId(@Param("accountId") Integer accountId);
 
+    @Select("SELECT * FROM order_info where url=#{url,jdbcType=VARCHAR} and IS_DEL='N' order by order_id desc")
+        //查询单个url的订单
+    List<OrderInfo> getOrderInfoByUrl(@Param("url") String url);
+
     @Select("SELECT * FROM order_info where account_id=#{accountId,jdbcType=INTEGER} " +
             "and category_id=#{categoryId,jdbcType=INTEGER} and IS_DEL='N'")
         //查询单个用户对应某个产品下的订单
@@ -34,6 +38,9 @@ public interface OrderInfoMapper {
             "      </if>" +
             "      <if test='priceId != null'>" +
             "        price_id," +
+            "      </if>" +
+            "      <if test='url != null'>" +
+            "        url," +
             "      </if>" +
             "      <if test='buyNum != null'>" +
             "        buy_num," +
@@ -69,6 +76,9 @@ public interface OrderInfoMapper {
             "      </if>" +
             "      <if test='priceId != null'>" +
             "        #{priceId,jdbcType=INTEGER}," +
+            "      </if>" +
+            "      <if test='url != null'>" +
+            "        #{url,jdbcType=VARCHAR}," +
             "      </if>" +
             "      <if test='buyNum != null'>" +
             "        #{buyNum,jdbcType=INTEGER}," +
@@ -107,6 +117,9 @@ public interface OrderInfoMapper {
             "      </if>" +
             "      <if test='priceId != null'>" +
             "        price_id = #{priceId,jdbcType=INTEGER}," +
+            "      </if>" +
+            "      <if test='url != null'>" +
+            "        url = #{url,jdbcType=VARCHAR}," +
             "      </if>" +
             "      <if test='buyNum != null'>" +
             "        buy_num = #{buyNum,jdbcType=INTEGER}," +
