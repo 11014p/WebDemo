@@ -1,7 +1,5 @@
 package com.demo.controller;
 
-import com.demo.enums.AccountStatusEnum;
-import com.demo.model.Account;
 import com.demo.service.ProductService;
 import com.demo.vo.ProductCategoryVo;
 import org.slf4j.Logger;
@@ -34,7 +32,7 @@ public class ProductController {
             language=LANGUAGE_DEFAULT;
         }
 //        Account account=new Account();
-//        account.setStatus(AccountStatusEnum.AGENT);
+//        account.setStatus(AccountRole.AGENT);
 //        request.getSession().setAttribute("account",account);
         List<ProductCategoryVo> categoryVoList = productService.getAllProductInfo(language);
         return categoryVoList;

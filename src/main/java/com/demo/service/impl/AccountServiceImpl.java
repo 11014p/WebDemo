@@ -9,6 +9,7 @@ import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
 import com.demo.dao.mapper.AccountFindpwdRecordMapper;
 import com.demo.dao.mapper.AccountMapper;
+import com.demo.enums.AccountRole;
 import com.demo.enums.ActiveEnum;
 import com.demo.enums.DelEnum;
 import com.demo.listner.event.PwdFindEvent;
@@ -78,6 +79,8 @@ public class AccountServiceImpl implements AccountService {
         Date date = new Date();
         account.setCreateTime(date);
         account.setUpdateTime(date);
+        //默认角色：访客
+        account.setAccountRole(AccountRole.GUEST);
         //默认账号未激活
         account.setIsActive(ActiveEnum.I);
         //默认账号非删除
@@ -101,6 +104,8 @@ public class AccountServiceImpl implements AccountService {
         }
         account.setUpdateTime(new Date());
         account.setIsActive(ActiveEnum.A);
+        //普通用户
+        account.setAccountRole(AccountRole.NORMAL);
         //账号激活
         accountMapper.updateAccount(account);
         logger.info("account active success.");

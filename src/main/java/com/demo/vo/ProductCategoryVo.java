@@ -1,6 +1,6 @@
 package com.demo.vo;
 
-import com.demo.enums.AccountStatusEnum;
+import com.demo.enums.AccountRole;
 import com.google.common.collect.Lists;
 import lombok.Data;
 
@@ -16,7 +16,7 @@ public class ProductCategoryVo implements Serializable {
 
     private String description;
 
-    private AccountStatusEnum status;
+    private AccountRole status;
 
     private String language;
 

@@ -1,13 +1,12 @@
 package com.demo.model;
 
-import com.demo.enums.AccountStatusEnum;
+import com.demo.enums.AccountRole;
 import com.demo.enums.ActiveEnum;
 import com.demo.enums.DelEnum;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @Data
 public class Account implements Serializable{
@@ -27,6 +26,6 @@ public class Account implements Serializable{
     private Date updateTime;
     //账户激活标记
     private ActiveEnum isActive;
-    //用户种类
-    private AccountStatusEnum status= AccountStatusEnum.NO_LOGIN;
+    //用户角色(默认Guest)
+    private AccountRole accountRole= AccountRole.GUEST;
 }

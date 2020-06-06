@@ -1,26 +1,16 @@
 package com.demo.service.impl;
 
 import com.demo.dao.mapper.*;
-import com.demo.enums.AccountStatusEnum;
 import com.demo.enums.OrderStatus;
 import com.demo.model.*;
 import com.demo.service.OrderService;
-import com.demo.service.ProductService;
-import com.demo.vo.ProductCategoryVo;
-import com.demo.vo.ProductPriceVo;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpSession;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service

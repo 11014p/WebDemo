@@ -1,7 +1,7 @@
 package com.demo.service.impl;
 
 import com.demo.dao.mapper.*;
-import com.demo.enums.AccountStatusEnum;
+import com.demo.enums.AccountRole;
 import com.demo.model.*;
 import com.demo.service.OrderService;
 import com.demo.service.ProductService;
@@ -19,8 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static com.demo.enums.AccountStatusEnum.AGENT;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -94,11 +92,9 @@ public class ProductServiceImpl implements ProductService {
 
     private void salePriceCalculate(ProductPriceVo vo, int categoryId, int count) {
         Account account = (Account) session.getAttribute("account");
-        AccountStatusEnum status = null;
+        AccountRole status = null;
         boolean isFirstBuy = false;
-        if (account == null) {
-            status = AccountStatusEnum.NO_LOGIN;
-        } else {
+        if (account != null)  {
             status = account.getStatus();
             Integer accountId = account.getId();
             List<OrderInfo> orderInfos = orderService.getOrderInfo(accountId, categoryId);
@@ -110,11 +106,13 @@ public class ProductServiceImpl implements ProductService {
         }
         //获取用户等级
         switch (status) {
+            case VIP:
+            case GOLDVIP:
             case AGENT:
                 Double salePrice = count * vo.getAgentDiscount() * vo.getCpm() / 1000;
                 vo.setSalePrice(salePrice);
                 break;
-            case LOGIN:
+            case NORMAL:
                 ProductDiscount discount = getDiscountRate(vo, count);
                 double discountRate = discount.getRate();
                 //首次购买,优先使用促销折扣计算售价（只限第一档，其它档位使用普通折扣）
@@ -128,7 +126,7 @@ public class ProductServiceImpl implements ProductService {
                 }
                 vo.setSalePrice(salePrice);
                 break;
-            case NO_LOGIN:
+            case GUEST:
             default:
                 ProductDiscount discountDefault = getDiscountRate(vo, count);
                 double commonRate = discountDefault.getRate();
