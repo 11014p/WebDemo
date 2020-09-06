@@ -39,7 +39,7 @@ public class ProductPriceVo implements Serializable{
 
     private double salePrice;
 
-    private boolean isFirstBuy;
+    private boolean firstBuyFlag;
 
     private List<ProductDiscount> discount= Lists.newArrayList();
 }

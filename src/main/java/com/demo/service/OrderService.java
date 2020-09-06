@@ -17,4 +17,7 @@ public interface OrderService {
 
     //下订单
     void saveOrderInfo(OrderInfo orderInfo);
+
+    //更新订单
+    void updateOrderInfo(OrderInfo orderInfo);
     }

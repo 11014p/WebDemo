@@ -1,5 +1,6 @@
 package com.demo.model;
 
+import com.demo.enums.DelEnum;
 import com.demo.enums.OrderStatus;
 import lombok.Data;
 
@@ -30,5 +31,5 @@ public class OrderInfo implements Serializable{
     //订单状态
     private OrderStatus status;
     //删除标记
-    private String isDel;
+    private DelEnum isDel;
 }

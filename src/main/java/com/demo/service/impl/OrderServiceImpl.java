@@ -1,15 +1,19 @@
 package com.demo.service.impl;
 
 import com.demo.dao.mapper.*;
+import com.demo.enums.DelEnum;
 import com.demo.enums.OrderStatus;
 import com.demo.model.*;
 import com.demo.service.OrderService;
+import com.demo.service.ProductService;
+import com.demo.vo.ProductCategoryVo;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +22,8 @@ public class OrderServiceImpl implements OrderService {
     private static final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
     @Autowired
     private OrderInfoMapper orderInfoMapper;
+    @Autowired
+    private ProductService productService;
 
     @Override
     public List<OrderInfo> getOrderInfo(int accountId, int categoryId) {
@@ -48,7 +54,26 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void saveOrderInfo(OrderInfo orderInfo) {
         Preconditions.checkNotNull(orderInfo, "orderInfo is null.");
+        if(isOrderInRunning(orderInfo.getUrl())){
+            throw new RuntimeException("The order["+orderInfo+"] hasn't finished,must wait to complete and go on next." );
+        }
+        ProductCategoryVo categoryVo = productService.getProductSalePrice(orderInfo.getCategoryId(), orderInfo.getPriceId(), orderInfo.getBuyNum(), null);
+        orderInfo.setSalePrice(categoryVo.getProduct().get(0).getSalePrice());
+        orderInfo.setStatus(OrderStatus.NEW);
+        orderInfo.setIsDel(DelEnum.N);
+        Date date=new Date();
+        orderInfo.setCreateTime(date);
+        orderInfo.setUpdateTime(date);
         orderInfoMapper.insertOrderInfo(orderInfo);
         logger.info("save order success,orderinfo[{}]",orderInfo);
+    }
+
+    @Override
+    public void updateOrderInfo(OrderInfo orderInfo) {
+        Preconditions.checkNotNull(orderInfo,"orderInfo is null.");
+        Preconditions.checkNotNull(orderInfo.getOrderId(),"orderId is null.");
+        orderInfo.setUpdateTime(new Date());
+        orderInfoMapper.updateOrderInfo(orderInfo);
+        logger.info("update order success,orderinfo[{}]",orderInfo);
     }
 }

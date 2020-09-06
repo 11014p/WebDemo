@@ -92,20 +92,20 @@ public class ProductServiceImpl implements ProductService {
 
     private void salePriceCalculate(ProductPriceVo vo, int categoryId, int count) {
         Account account = (Account) session.getAttribute("account");
-        AccountRole status = null;
+        AccountRole accountRole = null;
         boolean isFirstBuy = false;
         if (account != null)  {
-            status = account.getStatus();
+            accountRole = account.getAccountRole();
             Integer accountId = account.getId();
             List<OrderInfo> orderInfos = orderService.getOrderInfo(accountId, categoryId);
             //当前产品分类下没有购买记录，享受首次优惠
             if (orderInfos.isEmpty()) {
                 isFirstBuy = true;
-                vo.setFirstBuy(true);
+                vo.setFirstBuyFlag(true);
             }
         }
         //获取用户等级
-        switch (status) {
+        switch (accountRole) {
             case VIP:
             case GOLDVIP:
             case AGENT:
@@ -156,7 +156,7 @@ public class ProductServiceImpl implements ProductService {
             ProductCategoryVo rootCategoryVo = convertCategory(rootCategory);
             //添加用户状态
             if (account != null) {
-                rootCategoryVo.setStatus(account.getStatus());
+                rootCategoryVo.setStatus(account.getAccountRole());
             }
             //构建目录树
             buildCategoryTree(categoryMultimap.get(rootCategory.getCategoryId()), rootCategoryVo, categoryMultimap);
